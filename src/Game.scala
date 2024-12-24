@@ -15,31 +15,40 @@ object Game extends App {
   val offsetY: Int = (display.height - maze.GRID_HEIGHT) / 2
 
   val player = new Player(0, 1)
-  // ça c'est pour les déplacement de mon truc
   display.setKeyManager(new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
       if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-        player.move(0,- 1)
+        player.move(0,- 13)
       } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-        player.move(0, + 1)
+        player.move(0, + 13)
       } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-        player.move(+1, 0)
+        player.move(+13, 0)
       } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-        player.move(- 1, 0)
+        player.move(-13, 0)
       }
     }
   })
 
+//  while (true) {
+//    Thread.sleep(100)
+//    display.clear
+//    Generate()
+//    // Création du curseur
+//    display.setColor(Color.RED)
+//    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
+//    //refresh the screen at 60 FPS
+//    display.syncGameLogic(60)
+//  }
+
   while (true) {
+    /*Thread.sleep(100)
     display.clear
     Generate()
     // Création du curseur
     display.setColor(Color.RED)
     display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-    //refresh the screen at 120 FPS
-    // println(player.getPosX() + " " + player.getPosY() )
-    display.syncGameLogic(60)
-
+    //refresh the screen at 60 FPS
+    display.syncGameLogic(60)*/
   }
 
   /**
