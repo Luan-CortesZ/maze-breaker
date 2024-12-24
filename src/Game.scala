@@ -15,8 +15,8 @@ object Game extends App {
   val offsetY: Int = (display.height - maze.GRID_HEIGHT) / 2
 
   Generate()
+
   val player = new Player(0, 1)
-  display.drawForeground()
   display.setColor(Color.RED)
   display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
 
@@ -24,27 +24,27 @@ object Game extends App {
   display.setKeyManager(new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
       if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-        player.move(player.getPosX(), player.getPosY() + 1)
-        // yoffsetY -= 1
+        player.move(0,- 1)
         println("flèche du haut press")
       } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-        player.move(player.getPosX(), player.getPosY() - 1)
+        player.move(0, + 1)
       } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-        // xOffsetX += 1
-        player.move(player.getPosX() + 1, player.getPosY())
+        player.move(+1, 0)
       } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-        player.move(player.getPosX() - 1, player.getPosY())
+        player.move(- 1, 0)
       }
     }
   })
 
 //  while (true) {
 //    //draw our object
-//    var cursor = display.drawRect(player.getPosX(), player.getPosY(), 25, 25)
+//    display.setColor(Color.BLUE)
+//    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
 //    //refresh the screen at 120 FPS
-//    cursor = display.syncGameLogic(120)
-//    // cursor.clear()
-//    cursor
+//
+//    println(player.getPosX() + " " + player.getPosY() )
+//
+//    display.syncGameLogic(120)
 //  }
 
   /**
