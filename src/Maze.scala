@@ -100,3 +100,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     true
   }
 }
+
+
+
