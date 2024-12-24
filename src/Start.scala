@@ -1,22 +1,26 @@
 package src
 
 import hevs.graphics.FunGraphics
+import src.game_class.{Cell, Maze}
+import src.game_display.StartScreen
 
 import java.awt.{Color, Toolkit}
 
-object Game extends App{
+object Start extends App{
   val screenSize = Toolkit.getDefaultToolkit.getScreenSize
-  var maze: Maze = new Maze(75,45)
-  var display = new FunGraphics(screenSize.width,screenSize.height, "Maze breaker")
-  val offsetX: Int = (display.width - maze.GRID_WIDTH) / 2
-  val offsetY: Int = (display.height - maze.GRID_HEIGHT) / 2
+  var display: FunGraphics = null
+  var maze: Maze = new Maze(25,25)
+  var offsetX: Int = 0
+  var offsetY: Int = 0
 
-  Generate()
-
+  val startScreen = new StartScreen("Maze Breaker")
   /**
    * Draw maze generated
    */
-  private def Generate(): Unit = {
+  def Generate(): Unit = {
+    display = new FunGraphics(screenSize.width,screenSize.height, "Maze breaker")
+    offsetX = (display.width - maze.GRID_WIDTH) / 2
+    offsetY = (display.height - maze.GRID_HEIGHT) / 2
     for(x <- maze.grid.indices;
         y <- maze.grid(x).indices){
       drawCell(x, y, maze.grid(x)(y))
