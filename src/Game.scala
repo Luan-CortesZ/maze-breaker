@@ -14,18 +14,12 @@ object Game extends App {
   val offsetX: Int = (display.width - maze.GRID_WIDTH) / 2
   val offsetY: Int = (display.height - maze.GRID_HEIGHT) / 2
 
-  Generate()
-
   val player = new Player(0, 1)
-  display.setColor(Color.RED)
-  display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-
-
+  // ça c'est pour les déplacement de mon truc
   display.setKeyManager(new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
       if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
         player.move(0,- 1)
-        println("flèche du haut press")
       } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
         player.move(0, + 1)
       } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
@@ -36,16 +30,17 @@ object Game extends App {
     }
   })
 
-//  while (true) {
-//    //draw our object
-//    display.setColor(Color.BLUE)
-//    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-//    //refresh the screen at 120 FPS
-//
-//    println(player.getPosX() + " " + player.getPosY() )
-//
-//    display.syncGameLogic(120)
-//  }
+  while (true) {
+    display.clear
+    Generate()
+    // Création du curseur
+    display.setColor(Color.RED)
+    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
+    //refresh the screen at 120 FPS
+    // println(player.getPosX() + " " + player.getPosY() )
+    display.syncGameLogic(60)
+
+  }
 
   /**
    * Draw maze generated
@@ -64,6 +59,8 @@ object Game extends App {
    * @param y    coord y of cell
    * @param cell cell to draw
    */
+  // c'est ça la partie qui génère le labyrinthe
+    // bah ta mère, il le draw
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     if (cell.size < 0) return
 
