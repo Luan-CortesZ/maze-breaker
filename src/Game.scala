@@ -1,6 +1,7 @@
 package src
 
 import hevs.graphics.FunGraphics
+import hevs.graphics.samples.TestDrawString.fg.clear
 
 import java.awt.{Color, Toolkit}
 import java.awt.event.{KeyAdapter, KeyEvent, KeyListener}
@@ -14,47 +15,37 @@ object Game extends App {
   val offsetY: Int = (display.height - maze.GRID_HEIGHT) / 2
 
   Generate()
+  val player = new Player(0, 1)
+  display.drawForeground()
+  display.setColor(Color.RED)
+  display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
 
-  var xtest = 0
-  var ytest = 0
-  var xOffsetX = 0 // Gère le déplacement en X (Right/Left)
-  var yoffsetY = 0 // Gère le déplacement en Y (Haut/Bas)
 
   display.setKeyManager(new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
       if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-        if (!maze.grid(xtest)(ytest).isWall) {
-          yoffsetY -= 1
-        }
+        player.move(player.getPosX(), player.getPosY() + 1)
+        // yoffsetY -= 1
+        println("flèche du haut press")
       } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-        if (!maze.grid(xtest)(ytest).isWall) {
-          yoffsetY += 1
-        }
+        player.move(player.getPosX(), player.getPosY() - 1)
       } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-        if (!maze.grid(xtest)(ytest).isWall) {
-          xOffsetX += 1
-        }
+        // xOffsetX += 1
+        player.move(player.getPosX() + 1, player.getPosY())
       } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-        if (!maze.grid(xtest)(ytest).isWall) {
-          xOffsetX -= 1
-        }
+        player.move(player.getPosX() - 1, player.getPosY())
       }
-      xtest += 1
-      ytest += 1
     }
   })
-  while (true) {
-    //draw our object
-    var cursor = display.drawRect(0 + xOffsetX * 2, 0 + yoffsetY * 2, 25, 25)
-    //refresh the screen at 120 FPS
-    cursor = display.syncGameLogic(120)
-    // cursor.clear()
-    cursor
-  }
 
-  def clearCursor(): Unit = {
-
-  }
+//  while (true) {
+//    //draw our object
+//    var cursor = display.drawRect(player.getPosX(), player.getPosY(), 25, 25)
+//    //refresh the screen at 120 FPS
+//    cursor = display.syncGameLogic(120)
+//    // cursor.clear()
+//    cursor
+//  }
 
   /**
    * Draw maze generated
