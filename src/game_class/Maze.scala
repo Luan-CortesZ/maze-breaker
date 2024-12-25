@@ -1,5 +1,6 @@
 package src.game_class
 
+import scala.collection.mutable
 import scala.util.Random
 
 class Maze(width: Int, height: Int, var cellSize: Int = 30) {
@@ -10,7 +11,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   val grid: Array[Array[Cell]] = Array.ofDim(width,height) //Maze
 
   generateMaze() // Generate maze
-
+  solve()
   /**
    * Verify if specific cell of the maze is a wall or not
    * @param x Pos x of cell
@@ -50,14 +51,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
     //While maze generator not finished
     while (!isFinished){
-      val x = Random.nextInt(width-2)+1 // Get random x coord inside the grid (without border)
-      var y = 0;
-      // Get random y coord inside the grid (without border)
-      if(x % 2 == 0){
-        y = Random.nextInt((height-1)/2)*2+1
-      }else{
-        y = Random.nextInt((height-2)/2)*2+2
-      }
+      val (x,y) = getRandomWall()
 
       //Verify if coord is a wall
       if(isCellAWall(x,y)) {
@@ -90,6 +84,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
         }
       }
     }
+    complexify()
   }
 
   /**
@@ -108,5 +103,107 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       }
     }
     true
+  }
+
+  /**
+   * Complexify maze
+   */
+  private def complexify(): Unit = {
+    for(i <- 0 to width){
+      val (x,y) = getRandomWall()
+      grid(x)(y).isWall = false
+
+    }
+  }
+
+  /**
+   * Get random wall in the maze
+   * @return coord of random wall
+   */
+  private def getRandomWall(): (Int, Int) = {
+    val x = Random.nextInt(width-2)+1 // Get random x coord inside the grid (without border)
+    var y = 0;
+    // Get random y coord inside the grid (without border)
+    if(x % 2 == 0){
+      y = Random.nextInt((height-1)/2)*2+1
+    }else{
+      y = Random.nextInt((height-2)/2)*2+2
+    }
+    (x,y)
+  }
+
+  /**
+   * Solve maze
+   */
+  private def solve() : Unit = {
+    getDistanceFromExit()
+    findPath()
+  }
+
+  /**
+   * Find path to exit
+   */
+  private def findPath(): Unit = {
+    grid(entry._1)(entry._2).isPathToExit = true
+    var current = entry
+
+    //While current cell is not exit cell
+    while (current != exit) {
+      val (x, y) = current //Get coord of current cell
+
+      //Get neighbors of current cell
+      val neighbors = Seq(
+        (x - 1, y), // Haut
+        (x + 1, y), // Bas
+        (x, y - 1), // Gauche
+        (x, y + 1)  // Droite
+      )
+
+      //Find the neighbor with the smallest distance
+      val next = neighbors.filter {
+          case (nx, ny) =>
+          nx >= 0 && nx < width && ny >= 0 && ny < height && !isCellAWall(nx, ny)
+        }
+        .minBy { case (nx, ny) => grid(nx)(ny).distanceFromExit }
+
+      //Set nextCell PathToExit
+      grid(next._1)(next._2).isPathToExit = true
+      current = next // Set next cell to current cell
+    }
+  }
+
+  /**
+   * Get distance from all cells to exit
+   */
+  private def getDistanceFromExit(): Unit = {
+    //Create mutable queue to browse all cells
+    val queue: mutable.Queue[(Int, Int, Int)] = mutable.Queue()
+    grid(exit._1)(exit._2).distanceFromExit = 0 // Set exit cell with 0 distance
+    queue.enqueue((exit._1, exit._2, 0)) // Enqueue the exit cell with 0 distance
+
+    //While queue is not empty
+    while (queue.nonEmpty) {
+      //Dequeue cell and get his coord and distance
+      val (x, y, distance) = queue.dequeue()
+
+      // Go through cell neighbors
+      val neighbors = Seq(
+        (x - 1, y), // Up
+        (x + 1, y), // Down
+        (x, y - 1), // Left
+        (x, y + 1)  // Right
+      )
+
+      //Verify if neighbors are inside the grid
+      for ((nx, ny) <- neighbors; if nx >= 0 && nx < width && ny >= 0 && ny < height) {
+        val neighborCell = grid(nx)(ny)
+
+        //Verify if neighbor is not a wall and is not visited
+        if (!neighborCell.isWall && neighborCell.distanceFromExit == -1) {
+          neighborCell.distanceFromExit = distance + 1
+          queue.enqueue((nx, ny, neighborCell.distanceFromExit))
+        }
+      }
+    }
   }
 }
