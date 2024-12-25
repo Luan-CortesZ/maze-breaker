@@ -29,7 +29,7 @@ class StartScreen(var title: String) {
       if(e.getX >= btnExit.posX && e.getX <= btnExit.getPosXWidthButton && e.getY >= btnExit.posY && e.getY <= btnExit.getPosYHeightButton){
         sys.exit()
       }else if(e.getX >= btnStart.posX && e.getX <= btnStart.getPosXWidthButton && e.getY >= btnStart.posY && e.getY <= btnStart.getPosYHeightButton){
-        Start.Generate()
+        Start.Generate(true)
         display.mainFrame.dispose()
       }
     }

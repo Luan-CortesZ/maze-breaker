@@ -38,6 +38,24 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   }
 
   private def initializeEntryAndExit(): Unit = {
+    Random.nextInt(4) match {
+      case 0 => // Random entry in left section
+        do{
+          entry = (0, Random.nextInt(height))
+        }while(grid(entry._1+1)(entry._2).isWall)
+      case 1 => // Random entry in Up section
+        do{
+          entry = (Random.nextInt(width), 0)
+        }while(grid(entry._1)(entry._2+1).isWall)
+      case 2 => // Random entry in right section
+        do{
+          entry = (width-1, Random.nextInt(height))
+        }while(grid(entry._1-1)(entry._2).isWall)
+      case 3 => // Random entry in down section
+        do{
+          entry = (Random.nextInt(width), height-1)
+        }while(grid(entry._1)(entry._2-1).isWall)
+    }
     grid(entry._1)(entry._2).isWall = false
     grid(exit._1)(exit._2).isWall = false
   }
@@ -47,7 +65,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   private def generateMaze(): Unit = {
     initializeCell()
-    initializeEntryAndExit()
 
     //While maze generator not finished
     while (!isFinished){
@@ -85,6 +102,8 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       }
     }
     complexify()
+
+    initializeEntryAndExit()
   }
 
   /**
