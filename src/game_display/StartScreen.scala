@@ -13,13 +13,17 @@ class StartScreen(var title: String) {
   private val btnStart = new Button(150, 250,"START", 200, 80, display)
 
   displayTitle()
-  btnExit.displayButton(Color.white, 50f)
-  btnStart.displayButton(Color.white, 50f)
+  btnExit.displayButton(Color.black, Color.white, 50f)
+  btnStart.displayButton(Color.black, Color.white, 50f)
 
+  /**
+   * Display window title
+   */
   private def displayTitle(): Unit = {
     display.drawString(40,100,title, new CustomFont().upheaval.deriveFont(Font.PLAIN, 60f), Color.black)
   }
 
+  // Mouse listener to click on button
   display.addMouseListener(new MouseListener {
     override def mouseClicked(e: MouseEvent): Unit = {
       if(e.getX >= btnExit.posX && e.getX <= btnExit.getPosXWidthButton && e.getY >= btnExit.posY && e.getY <= btnExit.getPosYHeightButton){

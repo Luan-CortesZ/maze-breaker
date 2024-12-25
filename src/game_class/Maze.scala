@@ -12,6 +12,16 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   generateMaze() // Generate maze
 
   /**
+   * Verify if specific cell of the maze is a wall or not
+   * @param x Pos x of cell
+   * @param y Pos y of cell
+   * @return If cell is a wall
+   */
+  def isCellAWall(x: Int, y: Int): Boolean = {
+    grid(x)(y).isWall
+  }
+
+  /**
    * Initialize cells of the grid
    */
   private def initializeCell(): Unit = {
@@ -50,12 +60,12 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       }
 
       //Verify if coord is a wall
-      if(grid(x)(y).isWall) {
+      if(isCellAWall(x,y)) {
         var cell_1: Cell = new Cell()
         var cell_2: Cell = new Cell()
         //Verify if left cell to this cell is not a wall
         //Else its up and down cell
-        if (!grid(x - 1)(y).isWall) {
+        if (!isCellAWall(x-1,y)) {
           cell_1 = grid(x - 1)(y)
           cell_2 = grid(x + 1)(y)
         } else{
@@ -93,7 +103,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     //If not, the generation is not complete.
     for(x <- 1 until grid.length by 2;
         y <- 1 until grid(x).length by 2){
-      if(!grid(x)(y).isWall && grid(x)(y).number != nb){
+      if(!isCellAWall(x,y) && grid(x)(y).number != nb){
         return false
       }
     }
