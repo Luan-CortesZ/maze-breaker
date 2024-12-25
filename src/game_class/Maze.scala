@@ -149,11 +149,20 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   private def initializeEntryAndExit(): Unit = {
     createRandomEntry()
-    createRandomExit()
     grid(entry._1)(entry._2).isWall = false
-    grid(exit._1)(exit._2).isWall = false
     grid(entry._1)(entry._2).isEntry = true;
+
+    do{
+      createRandomExit()
+    }while(!isExitFarEnough)
     grid(exit._1)(exit._2).isExit = true;
+    grid(exit._1)(exit._2).isWall = false
+
+    def isExitFarEnough: Boolean = {
+      resetDistance()
+      getDistanceFromExit()
+      grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
+    }
   }
 
   /**
@@ -204,6 +213,14 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
         }while(isCellAWall(entry._1,entry._2-1))
     }
   }
+
+  def resetDistance(): Unit = {
+    for(x <- grid.indices;
+        y <- grid(x).indices){
+      grid(x)(y).distanceFromExit = -1
+    }
+  }
+
 
   /**
    * Solve maze
