@@ -12,6 +12,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
   generateMaze() // Generate maze
   solve()
+
   /**
    * Verify if specific cell of the maze is a wall or not
    * @param x Pos x of cell
@@ -20,6 +21,17 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   def isCellAWall(x: Int, y: Int): Boolean = {
     grid(x)(y).isWall
+  }
+
+  /**
+   * Check if cell is inside the maze
+   * @param x coord x of cell
+   * @param y coord y of cell
+   * @return true if cell position is valid
+   *         false if not
+   */
+  private def isValidCell(x: Int, y: Int): Boolean = {
+    x >= 0 && x < width && y >= 0 && y < height
   }
 
   /**
@@ -37,29 +49,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
   }
 
-  private def initializeEntryAndExit(): Unit = {
-    Random.nextInt(4) match {
-      case 0 => // Random entry in left section
-        do{
-          entry = (0, Random.nextInt(height))
-        }while(grid(entry._1+1)(entry._2).isWall)
-      case 1 => // Random entry in Up section
-        do{
-          entry = (Random.nextInt(width), 0)
-        }while(grid(entry._1)(entry._2+1).isWall)
-      case 2 => // Random entry in right section
-        do{
-          entry = (width-1, Random.nextInt(height))
-        }while(grid(entry._1-1)(entry._2).isWall)
-      case 3 => // Random entry in down section
-        do{
-          entry = (Random.nextInt(width), height-1)
-        }while(grid(entry._1)(entry._2-1).isWall)
-    }
-    grid(entry._1)(entry._2).isWall = false
-    grid(exit._1)(exit._2).isWall = false
-  }
-
   /**
    * Function that generate maze
    */
@@ -68,7 +57,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
     //While maze generator not finished
     while (!isFinished){
-      val (x,y) = getRandomWall()
+      val (x,y) = getRandomWall
 
       //Verify if coord is a wall
       if(isCellAWall(x,y)) {
@@ -102,7 +91,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       }
     }
     complexify()
-
     initializeEntryAndExit()
   }
 
@@ -129,7 +117,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   private def complexify(): Unit = {
     for(i <- 0 to width){
-      val (x,y) = getRandomWall()
+      val (x,y) = getRandomWall
       grid(x)(y).isWall = false
 
     }
@@ -139,7 +127,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    * Get random wall in the maze
    * @return coord of random wall
    */
-  private def getRandomWall(): (Int, Int) = {
+  private def getRandomWall: (Int, Int) = {
     val x = Random.nextInt(width-2)+1 // Get random x coord inside the grid (without border)
     var y = 0;
     // Get random y coord inside the grid (without border)
@@ -149,6 +137,67 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       y = Random.nextInt((height-2)/2)*2+2
     }
     (x,y)
+  }
+
+  /**
+   * Initialize random entry and exit
+   */
+  private def initializeEntryAndExit(): Unit = {
+    createRandomEntry()
+    createRandomExit()
+    grid(entry._1)(entry._2).isWall = false
+    grid(exit._1)(exit._2).isWall = false
+    grid(entry._1)(entry._2).isEntry = true;
+    grid(exit._1)(exit._2).isExit = true;
+  }
+
+  /**
+   * Create random exit inside de maze
+   */
+  private def createRandomExit(): Unit = {
+    do {
+      exit = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
+    } while (!isSurroundedByWalls(exit._1, exit._2) || isCellAWall(exit._1,exit._2))
+
+    def isSurroundedByWalls(x: Int, y: Int): Boolean = {
+      val directions = List(
+        (0, -1), // Haut
+        (0, 1),  // Bas
+        (-1, 0), // Gauche
+        (1, 0)   // Droite
+      )
+
+      // Compter les cellules voisines qui sont des murs
+      directions.count { case (dx, dy) =>
+        val nx = x + dx
+        val ny = y + dy
+        isValidCell(nx,ny) && isCellAWall(nx,ny)
+      } == 3
+    }
+  }
+
+  /**
+   * Create random entry at border of maze
+   */
+  private def createRandomEntry(): Unit = {
+    Random.nextInt(4) match {
+      case 0 => // Random entry in left section
+        do{
+          entry = (0, Random.nextInt(height))
+        }while(grid(entry._1+1)(entry._2).isWall)
+      case 1 => // Random entry in Up section
+        do{
+          entry = (Random.nextInt(width), 0)
+        }while(grid(entry._1)(entry._2+1).isWall)
+      case 2 => // Random entry in right section
+        do{
+          entry = (width-1, Random.nextInt(height))
+        }while(grid(entry._1-1)(entry._2).isWall)
+      case 3 => // Random entry in down section
+        do{
+          entry = (Random.nextInt(width), height-1)
+        }while(isCellAWall(entry._1,entry._2-1))
+    }
   }
 
   /**
@@ -180,8 +229,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
       //Find the neighbor with the smallest distance
       val next = neighbors.filter {
-          case (nx, ny) =>
-          nx >= 0 && nx < width && ny >= 0 && ny < height && !isCellAWall(nx, ny)
+          case (nx, ny) => isValidCell(nx,ny) && !isCellAWall(nx, ny)
         }
         .minBy { case (nx, ny) => grid(nx)(ny).distanceFromExit }
 
@@ -214,7 +262,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       )
 
       //Verify if neighbors are inside the grid
-      for ((nx, ny) <- neighbors; if nx >= 0 && nx < width && ny >= 0 && ny < height) {
+      for ((nx, ny) <- neighbors; if isValidCell(nx,ny)) {
         val neighborCell = grid(nx)(ny)
 
         //Verify if neighbor is not a wall and is not visited
