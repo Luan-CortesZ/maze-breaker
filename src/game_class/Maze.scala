@@ -4,6 +4,11 @@ import scala.collection.mutable
 import scala.util.Random
 
 class Maze(width: Int, height: Int, var cellSize: Int = 30) {
+  if(width % 2 == 0 || height % 2 == 0){
+    Console.err.println("the labyrinth must have an odd length and width")
+    sys.exit()
+  }
+
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
   var entry: (Int, Int) = (0, 1) //Coord of the entry
