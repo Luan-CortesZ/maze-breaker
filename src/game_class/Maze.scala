@@ -143,26 +143,37 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
     (x,y)
   }
-
   /**
    * Initialize random entry and exit
    */
   private def initializeEntryAndExit(): Unit = {
     createRandomEntry()
+    val entryCell = new Entry()
+    entryCell.distanceFromExit = grid(entry._1)(entry._2).distanceFromExit
+    entryCell.number = grid(entry._1)(entry._2).number
+    entryCell.size = grid(entry._1)(entry._2).size
+    entryCell.isPathToExit = grid(entry._1)(entry._2).isPathToExit
+    grid(entry._1)(entry._2) = entryCell
     grid(entry._1)(entry._2).isWall = false
-    grid(entry._1)(entry._2).isEntry = true;
 
     do{
       createRandomExit()
     }while(!isExitFarEnough)
-    grid(exit._1)(exit._2).isExit = true;
+
+    val exitCell = new Exit()
+    exitCell.distanceFromExit = grid(exit._1)(exit._2).distanceFromExit
+    exitCell.number = grid(exit._1)(exit._2).number
+    exitCell.isPathToExit = grid(exit._1)(exit._2).isPathToExit
+    exitCell.size = grid(exit._1)(exit._2).size
+    grid(exit._1)(exit._2) = exitCell
     grid(exit._1)(exit._2).isWall = false
 
-    def isExitFarEnough: Boolean = {
-      resetDistance()
-      getDistanceFromExit()
-      grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
-    }
+  }
+
+  private def isExitFarEnough: Boolean = {
+    resetDistance()
+    getDistanceFromExit()
+    grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
   }
 
   /**

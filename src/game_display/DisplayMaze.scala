@@ -43,8 +43,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
 
     // Specific color for specific cell
     val finalColor = if (!cell.isWall) {
-      if (cell.isExit) new Color(0, 255, 255)
-      else if (cell.isEntry) new Color(255, 255, 0)
+      if (cell.getClass.getSimpleName.equals("Exit")) new Color(0, 255, 255)
+      else if (cell.getClass.getSimpleName.equals("Entry")) new Color(255, 255, 0)
       else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
       else baseColor
     } else baseColor
