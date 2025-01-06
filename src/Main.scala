@@ -27,8 +27,8 @@ object Main extends App{
     //When window closed
     //Create the maze and display it
     override def windowDeactivated(e: WindowEvent): Unit = {
-      val maze: Maze = new Maze(25,25,40)
-      val displayMaze: DisplayMaze = new DisplayMaze(1000,1000,maze,true)
+      val maze: Maze = new Maze(25,25,20)
+      val displayMaze: DisplayMaze = new DisplayMaze(500,500,maze,true)
       displayMaze.showWindow()
     }
   })

@@ -1,7 +1,7 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
-import src.game_class.{Cell, Maze}
+import src.game_class.{Cell, Maze, Exit}
 
 import java.awt.{Color, Font}
 
@@ -43,9 +43,11 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
 
     // Specific color for specific cell
     val finalColor = if (!cell.isWall) {
-      if (cell.isExit) new Color(0, 255, 255)
-      else if (cell.isEntry) new Color(255, 255, 0)
+      if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
+      else if(cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
+      else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
       else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
+      else if (cell.getClass.getSimpleName.equals("Key")) new Color(255,255,0)
       else baseColor
     } else baseColor
 
