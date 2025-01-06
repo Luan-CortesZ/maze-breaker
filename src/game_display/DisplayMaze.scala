@@ -51,7 +51,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     while (true) {
       // Drawing
       display.frontBuffer.synchronized{
-        display.clear(Color.white)
+        display.clear(Color.black)
         drawMaze()
         drawPlayer()
       }
@@ -65,21 +65,24 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    * Draw maze generated
    */
   def drawMaze(): Unit = {
-    offsetX = (display.width - maze.GRID_WIDTH) / 2
-    offsetY = (display.height - maze.GRID_HEIGHT) / 2
-    for(x <- maze.grid.indices;
-        y <- maze.grid(x).indices){
+    // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
+    offsetX = display.width / 2 - player.getPosX() * maze.cellSize
+    offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+
+    // Dessiner les cellules visibles
+    for (x <- maze.grid.indices;
+         y <- maze.grid(x).indices) {
       drawCell(x, y, maze.grid(x)(y))
     }
   }
 
   def drawPlayer(): Unit = {
-    // Création du curseur
+    // Dessiner le joueur au centre de la fenêtre
     display.setColor(Color.RED)
-    display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
+    val centerX = display.width / 2
+    val centerY = display.height / 2
+    display.drawFilledCircle(centerX, centerY, maze.cellSize)
   }
-
-
 
   /**
    * Draw each cell
@@ -88,28 +91,34 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    * @param cell cell to draw
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
-    // Base color if cell is a wall or not and alter pattern
-    val baseColor = if (cell.isWall) {
-      if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
-    } else {
-      if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
+    // Calculer les coordonnées de la cellule avec les offsets
+    val drawX = x * cell.size + offsetX
+    val drawY = y * cell.size + offsetY
+
+    // Vérifier si la cellule est dans la zone visible avant de la dessiner
+    if (drawX + cell.size >= 0 && drawX <= display.width &&
+      drawY + cell.size >= 0 && drawY <= display.height) {
+
+      // Couleur de base
+      val baseColor = if (cell.isWall) {
+        if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
+      } else {
+        if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
+      }
+
+      // Couleur finale spécifique
+      val finalColor = if (!cell.isWall) {
+        if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
+        else if (cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
+        else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
+        else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
+        else if (cell.getClass.getSimpleName.equals("Key")) new Color(255, 255, 0)
+        else baseColor
+      } else baseColor
+
+      display.setColor(finalColor)
+      display.drawFillRect(drawX, drawY, cell.size, cell.size)
     }
-
-    // Specific color for specific cell
-    val finalColor = if (!cell.isWall) {
-      if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
-      else if(cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
-      else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
-      else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
-      else if (cell.getClass.getSimpleName.equals("Key")) new Color(255,255,0)
-      else baseColor
-    } else baseColor
-
-    display.setColor(finalColor)
-
-    // Draw cells
-    display.drawFillRect(x * cell.size + offsetX, y * cell.size + offsetY, cell.size, cell.size)
-
 
     /*
     //Show number assigned to cell
