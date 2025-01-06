@@ -29,8 +29,36 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
 
   def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
-    drawMaze()
+    player = new Player(maze.entry._1, maze.entry._2)
     addMovemement()
+  }
+
+  def addMovemement(): Unit = {
+    display.setKeyManager(new KeyAdapter() {
+      override def keyPressed(e: KeyEvent): Unit = {
+        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
+          player.move(0,-1)
+        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
+          player.move(0, +1)
+        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
+          player.move(+1, 0)
+        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
+          player.move(-1, 0)
+        }
+        maze.openExitIfPlayerOnKey(player.posX, player.posY)
+    }})
+
+    while (true) {
+      // Drawing
+      display.frontBuffer.synchronized{
+        display.clear(Color.white)
+        drawMaze()
+        drawPlayer()
+      }
+
+      // FPS sync
+      display.syncGameLogic(60)
+    }
   }
 
   /**
@@ -46,73 +74,12 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
   }
 
   def drawPlayer(): Unit = {
-    drawMaze()
     // Création du curseur
     display.setColor(Color.RED)
     display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
   }
 
-  def addMovemement(): Unit = {
-    player = new Player(maze.entry._1, maze.entry._2)
-    drawPlayer()
 
-    display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          player.move(0,-1)
-          drawPlayer()
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          player.move(0, +1)
-          drawPlayer()
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          player.move(+1, 0)
-          drawPlayer()
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          player.move(-1, 0)
-          drawPlayer()
-        }
-      }
-    })
-
-    /*display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          player.move(0,-13)
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          player.move(0, +13)
-          drawPlayer(maze, displayPath)
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          player.move(+13, 0)
-          drawPlayer(maze, displayPath)
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          player.move(-13, 0)
-          drawPlayer(maze, displayPath)
-        }
-      }
-    })
-
-    //  while (true) {
-    //    Thread.sleep(100)
-    //    display.clear
-    //    Generate()
-    //    // Création du curseur
-    //    display.setColor(Color.RED)
-    //    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-    //    //refresh the screen at 60 FPS
-    //    display.syncGameLogic(60)
-    //  }
-
-    while (true) {
-      Thread.sleep(100)
-      display.clear
-      Generate()
-      // Création du curseur
-      display.setColor(Color.RED)
-      display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-      //refresh the screen at 60 FPS
-      display.syncGameLogic(60)
-    }*/
-  }
 
   /**
    * Draw each cell
