@@ -97,6 +97,22 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
     complexify()
     initializeEntryAndExit()
+    createKey()
+  }
+
+  private def createKey(): Unit = {
+    val cell: (Int,Int) = getRandomCell
+    val keyCell = new Key()
+    keyCell.distanceFromExit = grid(cell._1)(cell._2).distanceFromExit
+    keyCell.number = grid(cell._1)(cell._2).number
+    keyCell.size = grid(cell._1)(cell._2).size
+    keyCell.isPathToExit = grid(cell._1)(cell._2).isPathToExit
+    keyCell.isWall = false
+    grid(cell._1)(cell._2) = keyCell
+  }
+
+  private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Exit") || grid(x)(y).getClass.getSimpleName.equals("Entry")
   }
 
   /**
@@ -124,8 +140,15 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     for(i <- 0 to width){
       val (x,y) = getRandomWall
       grid(x)(y).isWall = false
-
     }
+  }
+
+  private def getRandomCell: (Int, Int) = {
+    var cell: (Int,Int) = (0,0)
+    do{
+      cell = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
+    }while(isCellAWall(cell._1,cell._2) || isCellEntryOrExit(cell._1, cell._2))
+    cell
   }
 
   /**
