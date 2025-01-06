@@ -1,7 +1,8 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
-import src.game_class.{Cell, Maze, Exit}
+import hevs.graphics.utils.GraphicsBitmap
+import src.game_class.{Cell, Exit, Maze}
 
 import java.awt.{Color, Font}
 
@@ -9,6 +10,9 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
   var display: FunGraphics = _
   var offsetX: Int = 0
   var offsetY: Int = 0
+  val keyPicture = new GraphicsBitmap("/src/res/chest.png")
+  val groundPicture = new GraphicsBitmap("/src/res/ground.png")
+  val wallPicture = new GraphicsBitmap("/src/res/wall.png")
 
   def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
@@ -34,28 +38,31 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    * @param cell cell to draw
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
-    // Base color if cell is a wall or not and alter pattern
-    val baseColor = if (cell.isWall) {
-      if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
-    } else {
-      if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
-    }
-
     // Specific color for specific cell
-    val finalColor = if (!cell.isWall) {
+    val finalColor = {
       if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
       else if(cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
       else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
       else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
       else if (cell.getClass.getSimpleName.equals("Key")) new Color(255,255,0)
-      else baseColor
-    } else baseColor
+      else new Color(0,0,0)
+    }
 
     display.setColor(finalColor)
 
-    // Draw cells
-    display.drawFillRect(x * cell.size + offsetX, y * cell.size + offsetY, cell.size, cell.size)
+    if (cell.isWall){
+      display.drawTransformedPicture(x * cell.size + offsetX + cell.size/2, y * cell.size + offsetY + cell.size/2, 0, 1, wallPicture)
+    }else if (!cell.isWall){
+      if(finalColor != Color.black) {
+        display.drawFillRect(x * cell.size + offsetX, y * cell.size + offsetY, cell.size, cell.size)
+      }else{
+        display.drawTransformedPicture(x * cell.size + offsetX + cell.size/2, y * cell.size + offsetY + cell.size/2, 0, 1, groundPicture)
+      }
+    }
 
+    if (cell.getClass.getSimpleName.equals("Key")){
+      display.drawTransformedPicture(x * cell.size + offsetX + cell.size/2, y * cell.size + offsetY + cell.size/2, 0, 1, keyPicture)
+    }
 
     /*
     //Show number assigned to cell
