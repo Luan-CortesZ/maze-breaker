@@ -1,15 +1,11 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
-import src.game_class.{Cell, Maze, Player}
+import src.game_class.{Cell, Exit, Maze, Player}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.{Color, Font}
-
-
-class DisplayMaze(width: Int, height: Int) {
-
-  /*
+/*
   J'ai modifié ta façon de déplacer le joueur, ta manière de penser était bonne mais
   je pense pas qu'on ai besoin de boucle, sachant que ça update le dessin indéfiniment et que
   ça crée des clignotements. Je n'arrivais pas à déplacer le joueur quand il y avait la boucle aussi
@@ -25,56 +21,55 @@ class DisplayMaze(width: Int, height: Int) {
 
   Si t'as des questions hésite pas
    */
-
-
-  var display: FunGraphics = null
+class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false) {
+  var display: FunGraphics = _
   var offsetX: Int = 0
   var offsetY: Int = 0
   var player = new Player(0, 1)
 
-  def displayGame(maze: Maze, displayPath: Boolean = false): Unit ={
+  def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
-    Generate(maze, displayPath)
-    addMovemement(maze, displayPath)
+    drawMaze()
+    addMovemement()
   }
 
   /**
    * Draw maze generated
    */
-  def Generate(maze: Maze, displayPath: Boolean = false): Unit = {
+  def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     for(x <- maze.grid.indices;
         y <- maze.grid(x).indices){
-      drawCell(x, y, maze.grid(x)(y), displayPath)
+      drawCell(x, y, maze.grid(x)(y))
     }
   }
 
-  def drawPlayer(maze: Maze, displayPath: Boolean = false): Unit = {
-    Generate(maze, displayPath)
+  def drawPlayer(): Unit = {
+    drawMaze()
     // Création du curseur
     display.setColor(Color.RED)
     display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
   }
 
-  def addMovemement(maze: Maze, displayPath: Boolean = false): Unit = {
+  def addMovemement(): Unit = {
     player = new Player(maze.entry._1, maze.entry._2)
-    drawPlayer(maze, displayPath)
+    drawPlayer()
 
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
           player.move(0,-1)
-          drawPlayer(maze, displayPath)
+          drawPlayer()
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
           player.move(0, +1)
-          drawPlayer(maze, displayPath)
+          drawPlayer()
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
           player.move(+1, 0)
-          drawPlayer(maze, displayPath)
+          drawPlayer()
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
           player.move(-1, 0)
-          drawPlayer(maze, displayPath)
+          drawPlayer()
         }
       }
     })
@@ -125,7 +120,7 @@ class DisplayMaze(width: Int, height: Int) {
    * @param y coord y of cell
    * @param cell cell to draw
    */
-  private def drawCell(x: Int, y: Int, cell: Cell, displayPath: Boolean = false): Unit = {
+  private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     // Base color if cell is a wall or not and alter pattern
     val baseColor = if (cell.isWall) {
       if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
@@ -135,9 +130,11 @@ class DisplayMaze(width: Int, height: Int) {
 
     // Specific color for specific cell
     val finalColor = if (!cell.isWall) {
-      if (cell.isExit) new Color(0, 255, 255)
-      else if (cell.isEntry) new Color(255, 255, 0)
+      if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
+      else if(cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
+      else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
       else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
+      else if (cell.getClass.getSimpleName.equals("Key")) new Color(255,255,0)
       else baseColor
     } else baseColor
 
@@ -154,9 +151,9 @@ class DisplayMaze(width: Int, height: Int) {
     }else{
       display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
     }
-    */
+
     //Show distance from exit
-    /*if(!cell.isWall) {
+    if(!cell.isWall) {
       display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
     }*/
   }

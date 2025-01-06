@@ -4,6 +4,11 @@ import scala.collection.mutable
 import scala.util.Random
 
 class Maze(width: Int, height: Int, var cellSize: Int = 30) {
+  if(width % 2 == 0 || height % 2 == 0){
+    Console.err.println("the labyrinth must have an odd length and width")
+    sys.exit()
+  }
+
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
   var entry: (Int, Int) = (0, 1) //Coord of the entry
@@ -92,6 +97,22 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
     complexify()
     initializeEntryAndExit()
+    createKey()
+  }
+
+  private def createKey(): Unit = {
+    val cell: (Int,Int) = getRandomCell
+    val keyCell = new Key()
+    keyCell.distanceFromExit = grid(cell._1)(cell._2).distanceFromExit
+    keyCell.number = grid(cell._1)(cell._2).number
+    keyCell.size = grid(cell._1)(cell._2).size
+    keyCell.isPathToExit = grid(cell._1)(cell._2).isPathToExit
+    keyCell.isWall = false
+    grid(cell._1)(cell._2) = keyCell
+  }
+
+  private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Exit") || grid(x)(y).getClass.getSimpleName.equals("Entry")
   }
 
   /**
@@ -119,8 +140,15 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     for(i <- 0 to width){
       val (x,y) = getRandomWall
       grid(x)(y).isWall = false
-
     }
+  }
+
+  private def getRandomCell: (Int, Int) = {
+    var cell: (Int,Int) = (0,0)
+    do{
+      cell = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
+    }while(isCellAWall(cell._1,cell._2) || isCellEntryOrExit(cell._1, cell._2))
+    cell
   }
 
   /**
@@ -138,17 +166,37 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
     (x,y)
   }
-
   /**
    * Initialize random entry and exit
    */
   private def initializeEntryAndExit(): Unit = {
     createRandomEntry()
-    createRandomExit()
+    val entryCell = new Entry()
+    entryCell.distanceFromExit = grid(entry._1)(entry._2).distanceFromExit
+    entryCell.number = grid(entry._1)(entry._2).number
+    entryCell.size = grid(entry._1)(entry._2).size
+    entryCell.isPathToExit = grid(entry._1)(entry._2).isPathToExit
+    grid(entry._1)(entry._2) = entryCell
     grid(entry._1)(entry._2).isWall = false
+
+    do{
+      createRandomExit()
+    }while(!isExitFarEnough)
+
+    val exitCell = new Exit()
+    exitCell.distanceFromExit = grid(exit._1)(exit._2).distanceFromExit
+    exitCell.number = grid(exit._1)(exit._2).number
+    exitCell.isPathToExit = grid(exit._1)(exit._2).isPathToExit
+    exitCell.size = grid(exit._1)(exit._2).size
+    grid(exit._1)(exit._2) = exitCell
     grid(exit._1)(exit._2).isWall = false
-    grid(entry._1)(entry._2).isEntry = true;
-    grid(exit._1)(exit._2).isExit = true;
+
+  }
+
+  private def isExitFarEnough: Boolean = {
+    resetDistance()
+    getDistanceFromExit()
+    grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
   }
 
   /**
@@ -199,6 +247,14 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
         }while(isCellAWall(entry._1,entry._2-1))
     }
   }
+
+  def resetDistance(): Unit = {
+    for(x <- grid.indices;
+        y <- grid(x).indices){
+      grid(x)(y).distanceFromExit = -1
+    }
+  }
+
 
   /**
    * Solve maze

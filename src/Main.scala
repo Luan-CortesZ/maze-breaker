@@ -3,7 +3,7 @@ package src
 import src.game_class.Maze
 import src.game_display.{DisplayMaze, StartScreen}
 
-import java.awt.event.{KeyAdapter, KeyEvent, WindowEvent, WindowListener}
+import java.awt.event.{WindowEvent, WindowListener}
 import java.awt.Toolkit
 
 object Main extends App{
@@ -27,9 +27,9 @@ object Main extends App{
     //When window closed
     //Create the maze and display it
     override def windowDeactivated(e: WindowEvent): Unit = {
-      val displayMaze: DisplayMaze = new DisplayMaze(1000,1000)
-      val maze: Maze = new Maze(25,25)
-      displayMaze.displayGame(maze)
+      val maze: Maze = new Maze(25,25,20)
+      val displayMaze: DisplayMaze = new DisplayMaze(500,500,maze,true)
+      displayMaze.showWindow()
     }
   })
 
