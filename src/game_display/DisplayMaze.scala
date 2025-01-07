@@ -5,22 +5,7 @@ import src.game_class.{Cell, Exit, Maze, Player}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.{Color, Font}
-/*
-  J'ai modifié ta façon de déplacer le joueur, ta manière de penser était bonne mais
-  je pense pas qu'on ai besoin de boucle, sachant que ça update le dessin indéfiniment et que
-  ça crée des clignotements. Je n'arrivais pas à déplacer le joueur quand il y avait la boucle aussi
 
-  J'ai également réorganiser les fichiers du projet pour qu'on s'y retrouve mieux
-  Le fichier Game -> Main
-  pour dessiner le labyrinthe j'ai déplacé tout dans ce fichier donc c'est ici qu'on gère les dessins
-
-
-  J'ai gardé ton code en commentaire mais j'ai crée plusieurs méthodes pour que le déplacement se fasse correctement dans le labyrinthe
-
-  à toi d'implémenter lorsque le joueur croise un mur ou lorsqu'il sort du labyrinthe
-
-  Si t'as des questions hésite pas
-   */
 class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false) {
   var display: FunGraphics = _
   var offsetX: Int = 0
@@ -37,13 +22,25 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          player.move(0,-1)
+          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
+            player.move(0,-1)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          player.move(0, +1)
+          if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
+            player.move(0, +1)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          player.move(+1, 0)
+          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
+            player.move(+1, 0)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          player.move(-1, 0)
+          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
+            player.move(-1, 0)
+            drawPlayer()
+          }
         }
         maze.openExitIfPlayerOnKey(player.posX, player.posY)
     }})
@@ -55,10 +52,11 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
         drawMaze()
         drawPlayer()
       }
-
+      
       // FPS sync
       display.syncGameLogic(60)
     }
+
   }
 
   /**
