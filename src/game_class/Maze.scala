@@ -133,6 +133,13 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     true
   }
 
+  def openExitIfPlayerOnKey(x: Int, y: Int): Unit = {
+    if(grid(x)(y).getClass.getSimpleName.equals("Key")){
+      grid(exit._1)(exit._2).asInstanceOf[Exit].isLock = false
+      grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
+    }
+  }
+
   /**
    * Complexify maze
    */

@@ -5,22 +5,7 @@ import src.game_class.{Cell, Exit, Maze, Player}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.{Color, Font}
-/*
-  J'ai modifié ta façon de déplacer le joueur, ta manière de penser était bonne mais
-  je pense pas qu'on ai besoin de boucle, sachant que ça update le dessin indéfiniment et que
-  ça crée des clignotements. Je n'arrivais pas à déplacer le joueur quand il y avait la boucle aussi
 
-  J'ai également réorganiser les fichiers du projet pour qu'on s'y retrouve mieux
-  Le fichier Game -> Main
-  pour dessiner le labyrinthe j'ai déplacé tout dans ce fichier donc c'est ici qu'on gère les dessins
-
-
-  J'ai gardé ton code en commentaire mais j'ai crée plusieurs méthodes pour que le déplacement se fasse correctement dans le labyrinthe
-
-  à toi d'implémenter lorsque le joueur croise un mur ou lorsqu'il sort du labyrinthe
-
-  Si t'as des questions hésite pas
-   */
 class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false) {
   var display: FunGraphics = _
   var offsetX: Int = 0
@@ -29,40 +14,15 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
 
   def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
-    drawMaze()
+    player = new Player(maze.entry._1, maze.entry._2)
     addMovemement()
   }
 
-  /**
-   * Draw maze generated
-   */
-  def drawMaze(): Unit = {
-    offsetX = (display.width - maze.GRID_WIDTH) / 2
-    offsetY = (display.height - maze.GRID_HEIGHT) / 2
-    for(x <- maze.grid.indices;
-        y <- maze.grid(x).indices){
-      drawCell(x, y, maze.grid(x)(y))
-    }
-  }
-
-  def drawPlayer(): Unit = {
-    drawMaze()
-    // Création du curseur
-    display.setColor(Color.RED)
-    display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
-  }
-
   def addMovemement(): Unit = {
-    player = new Player(maze.entry._1, maze.entry._2)
-    drawPlayer()
-
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
           if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
-            player.move(0,-1)
-            drawPlayer()
-          } else if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
             player.move(0,-1)
             drawPlayer()
           }
@@ -82,47 +42,43 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
             drawPlayer()
           }
         }
-      }
-    })
-
-    /*display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          player.move(0,-13)
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          player.move(0, +13)
-          drawPlayer(maze, displayPath)
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          player.move(+13, 0)
-          drawPlayer(maze, displayPath)
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          player.move(-13, 0)
-          drawPlayer(maze, displayPath)
-        }
-      }
-    })
-
-    //  while (true) {
-    //    Thread.sleep(100)
-    //    display.clear
-    //    Generate()
-    //    // Création du curseur
-    //    display.setColor(Color.RED)
-    //    display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-    //    //refresh the screen at 60 FPS
-    //    display.syncGameLogic(60)
-    //  }
+        maze.openExitIfPlayerOnKey(player.posX, player.posY)
+    }})
 
     while (true) {
-      Thread.sleep(100)
-      display.clear
-      Generate()
-      // Création du curseur
-      display.setColor(Color.RED)
-      display.drawFilledCircle(player.getPosX(), player.getPosY(), 10)
-      //refresh the screen at 60 FPS
-      display.syncGameLogic(60)
-    }*/
+      // Drawing
+      display.frontBuffer.synchronized{
+        display.clear(Color.black)
+        drawMaze()
+        drawPlayer()
+      }
+    }
+
+    // FPS sync
+    display.syncGameLogic(60)
+  }
+
+  /**
+   * Draw maze generated
+   */
+  def drawMaze(): Unit = {
+    // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
+    offsetX = display.width / 2 - player.getPosX() * maze.cellSize
+    offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+
+    // Dessiner les cellules visibles
+    for (x <- maze.grid.indices;
+         y <- maze.grid(x).indices) {
+      drawCell(x, y, maze.grid(x)(y))
+    }
+  }
+
+  def drawPlayer(): Unit = {
+    // Dessiner le joueur au centre de la fenêtre
+    display.setColor(Color.RED)
+    val centerX = display.width / 2
+    val centerY = display.height / 2
+    display.drawFilledCircle(centerX, centerY, maze.cellSize)
   }
 
   /**
@@ -132,28 +88,34 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    * @param cell cell to draw
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
-    // Base color if cell is a wall or not and alter pattern
-    val baseColor = if (cell.isWall) {
-      if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
-    } else {
-      if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
+    // Calculer les coordonnées de la cellule avec les offsets
+    val drawX = x * cell.size + offsetX
+    val drawY = y * cell.size + offsetY
+
+    // Vérifier si la cellule est dans la zone visible avant de la dessiner
+    if (drawX + cell.size >= 0 && drawX <= display.width &&
+      drawY + cell.size >= 0 && drawY <= display.height) {
+
+      // Couleur de base
+      val baseColor = if (cell.isWall) {
+        if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
+      } else {
+        if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
+      }
+
+      // Couleur finale spécifique
+      val finalColor = if (!cell.isWall) {
+        if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
+        else if (cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
+        else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
+        else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
+        else if (cell.getClass.getSimpleName.equals("Key")) new Color(255, 255, 0)
+        else baseColor
+      } else baseColor
+
+      display.setColor(finalColor)
+      display.drawFillRect(drawX, drawY, cell.size, cell.size)
     }
-
-    // Specific color for specific cell
-    val finalColor = if (!cell.isWall) {
-      if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
-      else if(cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
-      else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
-      else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
-      else if (cell.getClass.getSimpleName.equals("Key")) new Color(255,255,0)
-      else baseColor
-    } else baseColor
-
-    display.setColor(finalColor)
-
-    // Draw cells
-    display.drawFillRect(x * cell.size + offsetX, y * cell.size + offsetY, cell.size, cell.size)
-
 
     /*
     //Show number assigned to cell
