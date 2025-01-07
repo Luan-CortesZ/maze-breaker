@@ -111,8 +111,20 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     grid(cell._1)(cell._2) = keyCell
   }
 
+  def isExitLock(): Boolean = {
+    grid(exit._1)(exit._2).asInstanceOf[Exit].isLock
+  }
+
+  def isCellExit(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Exit")
+  }
+
+  def isCellEntry(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Entry")
+  }
+
   private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
-    grid(x)(y).getClass.getSimpleName.equals("Exit") || grid(x)(y).getClass.getSimpleName.equals("Entry")
+    isCellExit(x,y) || isCellEntry(x,y)
   }
 
   /**

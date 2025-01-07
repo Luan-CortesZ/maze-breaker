@@ -11,6 +11,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
   var offsetX: Int = 0
   var offsetY: Int = 0
   var player = new Player(0, 1)
+  var messageStartTime: Long = 0
+  var doorLockedMessage: Boolean = false;
 
   def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
@@ -23,40 +25,66 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
           if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
-            player.move(0,-1)
-            drawPlayer()
+            if(maze.isCellExit(player.getPosX(), player.getPosY() - 1) && maze.isExitLock()){
+              doorLockedMessage = true
+            }else{
+              player.move(0,-1)
+              drawPlayer()
+            }
           }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
           if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
-            player.move(0, +1)
-            drawPlayer()
+            if(maze.isCellExit(player.getPosX(), player.getPosY() + 1) && maze.isExitLock()){
+              doorLockedMessage = true
+            }else{
+              player.move(0, +1)
+              drawPlayer()
+            }
           }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
           if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
-            player.move(+1, 0)
-            drawPlayer()
+            if(maze.isCellExit(player.getPosX() + 1, player.getPosY()) && maze.isExitLock()){
+              doorLockedMessage = true
+            }else{
+              player.move(+1, 0)
+              drawPlayer()
+            }
           }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
           if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
-            player.move(-1, 0)
-            drawPlayer()
+            if(maze.isCellExit(player.getPosX() - 1, player.getPosY()) && maze.isExitLock()){
+              doorLockedMessage = true
+            }else{
+              player.move(-1, 0)
+              drawPlayer()
+            }
           }
         }
         maze.openExitIfPlayerOnKey(player.posX, player.posY)
     }})
 
     while (true) {
+      if (doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
+
+      // Calculer le temps écoulé
+      val currentTime = System.currentTimeMillis
+      if (doorLockedMessage && (currentTime - messageStartTime > 3000)) {
+        doorLockedMessage = false
+        messageStartTime = 0
+      }
+
       // Drawing
       display.frontBuffer.synchronized{
         display.clear(Color.black)
         drawMaze()
         drawPlayer()
+        if(doorLockedMessage){
+          display.drawString(getXCoordWithOffset(player.getPosX())-50, getYCoordWithOffset(player.getPosY())-20, "The door is locked", new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+        }
       }
-      
       // FPS sync
       display.syncGameLogic(60)
     }
-
   }
 
   /**
@@ -86,8 +114,16 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     if(centerCamera){
       display.drawFilledCircle(centerX, centerY, maze.cellSize)
     }else{
-      display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
+      display.drawFilledCircle(getXCoordWithOffset(player.getPosX()), getYCoordWithOffset(player.getPosY()), maze.cellSize)
     }
+  }
+
+  def getXCoordWithOffset(x: Int): Int = {
+    x*maze.cellSize+offsetX
+  }
+
+  def getYCoordWithOffset(y: Int): Int = {
+    y*maze.cellSize+offsetY
   }
 
   /**
@@ -98,8 +134,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     // Calculer les coordonnées de la cellule avec les offsets
-    val drawX = x * cell.size + offsetX
-    val drawY = y * cell.size + offsetY
+    val drawX = getXCoordWithOffset(x)
+    val drawY = getYCoordWithOffset(y)
 
     // Vérifier si la cellule est dans la zone visible avant de la dessiner
     if (drawX + cell.size >= 0 && drawX <= display.width &&
