@@ -52,10 +52,11 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
         drawMaze()
         drawPlayer()
       }
+      
+      // FPS sync
+      display.syncGameLogic(60)
     }
 
-    // FPS sync
-    display.syncGameLogic(60)
   }
 
   /**
