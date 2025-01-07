@@ -9,6 +9,9 @@ import java.awt.Toolkit
 object Main extends App{
   private val startScreen = new StartScreen("Maze Breaker")
   val screenSize = Toolkit.getDefaultToolkit.getScreenSize
+  val maze: Maze = new Maze(25,25,128)
+  val displayMaze: DisplayMaze = new DisplayMaze(700,700,maze)
+  displayMaze.showWindow()
 
   //Add window listener to startScreen frame
   startScreen.display.mainFrame.addWindowListener(new WindowListener {
@@ -27,9 +30,6 @@ object Main extends App{
     //When window closed
     //Create the maze and display it
     override def windowDeactivated(e: WindowEvent): Unit = {
-      val maze: Maze = new Maze(21,21,32)
-      val displayMaze: DisplayMaze = new DisplayMaze(700,700,maze)
-      displayMaze.showWindow()
     }
   })
 
