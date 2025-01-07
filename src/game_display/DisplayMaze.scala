@@ -59,17 +59,28 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          player.move(0,-1)
-          drawPlayer()
+          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
+            player.move(0,-1)
+            drawPlayer()
+          } else if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
+            player.move(0,-1)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          player.move(0, +1)
-          drawPlayer()
+          if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
+            player.move(0, +1)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          player.move(+1, 0)
-          drawPlayer()
+          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
+            player.move(+1, 0)
+            drawPlayer()
+          }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          player.move(-1, 0)
-          drawPlayer()
+          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
+            player.move(-1, 0)
+            drawPlayer()
+          }
         }
       }
     })
