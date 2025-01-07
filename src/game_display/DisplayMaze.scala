@@ -6,7 +6,7 @@ import src.game_class.{Cell, Exit, Maze, Player}
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.{Color, Font}
 
-class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false) {
+class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   var display: FunGraphics = _
   var offsetX: Int = 0
   var offsetY: Int = 0
@@ -63,9 +63,13 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
    * Draw maze generated
    */
   def drawMaze(): Unit = {
-    // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
-    offsetX = display.width / 2 - player.getPosX() * maze.cellSize
-    offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+    offsetX = (display.width - maze.GRID_WIDTH) / 2
+    offsetY = (display.height - maze.GRID_HEIGHT) / 2
+    if(centerCamera){
+      // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
+      offsetX = display.width / 2 - player.getPosX() * maze.cellSize
+      offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+    }
 
     // Dessiner les cellules visibles
     for (x <- maze.grid.indices;
@@ -79,7 +83,11 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     display.setColor(Color.RED)
     val centerX = display.width / 2
     val centerY = display.height / 2
-    display.drawFilledCircle(centerX, centerY, maze.cellSize)
+    if(centerCamera){
+      display.drawFilledCircle(centerX, centerY, maze.cellSize)
+    }else{
+      display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
+    }
   }
 
   /**
