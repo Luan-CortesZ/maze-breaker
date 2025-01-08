@@ -16,16 +16,11 @@ class Button(var posX: Int, var posY: Int, var title: String, var width: Int, va
   def displayButton(buttonColor: Color, textColor: Color, textSize: Float): Unit = {
     display.setColor(buttonColor)
     display.drawFillRect(posX, posY, width, height)
-
-    // Make text center
     val font = new CustomFont().upheaval.deriveFont(Font.PLAIN, textSize)
-    val fontRenderContext = new FontRenderContext(null, true, true)
-    val fontMetrics = font.getLineMetrics(title, fontRenderContext)
-    val textHeight = fontMetrics.getAscent
-    val descent = fontMetrics.getDescent
-    val textWidth = font.getStringBounds(title, fontRenderContext).getWidth.toInt
-    val textX: Int = posX + (width - textWidth) / 2
-    val textY: Int = (posY + (height + textHeight) / 2 - descent.toInt).toInt
+    var stringSize = display.getStringSize(title, font)
+    // Make text center
+    val textX: Int = (posX + (width - stringSize.getWidth) / 2).toInt
+    val textY: Int = (posY + (height + stringSize.getHeight) / 2 - 5).toInt
 
     // Draw centered text
     display.drawString(textX, textY, title, font, textColor)

@@ -1,40 +1,37 @@
 package src
 
+import hevs.graphics.FunGraphics
 import src.game_class.Maze
 import src.game_display.{DisplayMaze, StartScreen}
 
 import java.awt.event.{WindowEvent, WindowListener}
 import java.awt.Toolkit
+import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
 
 object Main extends App{
-  private val startScreen = new StartScreen("Maze Breaker")
-  val screenSize = Toolkit.getDefaultToolkit.getScreenSize
   val maze: Maze = new Maze(25,25,32)
-  val displayMaze: DisplayMaze = new DisplayMaze(800,800,maze,false,false)
-  displayMaze.showWindow()
+  val display: FunGraphics = new FunGraphics(700,700, "Maze-breaker")
+  val displayMaze: DisplayMaze = new DisplayMaze(display,maze,false,true)
+  val startScreen = new StartScreen(display)
 
-  //Add window listener to startScreen frame
-  startScreen.display.mainFrame.addWindowListener(new WindowListener {
-    override def windowOpened(e: WindowEvent): Unit = {}
+  // Lock and condition for better control
+  val lock: Lock = new ReentrantLock()
+  val condition: Condition = lock.newCondition()
 
-    override def windowClosing(e: WindowEvent): Unit = {}
-
-    override def windowClosed(e: WindowEvent): Unit = {}
-
-    override def windowIconified(e: WindowEvent): Unit = {}
-
-    override def windowDeiconified(e: WindowEvent): Unit = {}
-
-    override def windowActivated(e: WindowEvent): Unit = {}
-
-    //When window closed
-    //Create the maze and display it
-    override def windowDeactivated(e: WindowEvent): Unit = {
+  startScreen.setOnGameStart(() => {
+    lock.lock()
+    try {
+      condition.signal()
+    } finally {
+      lock.unlock()
     }
   })
 
-
-
-
-
+  lock.lock()
+  try {
+    condition.await() // Wait until `startGame` is set to true
+  } finally {
+    lock.unlock()
+  }
+  displayMaze.showWindow()
 }

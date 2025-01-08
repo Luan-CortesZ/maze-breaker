@@ -6,14 +6,12 @@ import src.game_class.{Cell, Exit, Maze, Player}
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.{Color, Font}
 
-class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
-  var display: FunGraphics = _
+class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   var offsetX: Int = 0
   var offsetY: Int = 0
   var player = new Player(0, 1)
 
   def showWindow(): Unit = {
-    display = new FunGraphics(width,height, "Maze breaker")
     player = new Player(maze.entry._1, maze.entry._2)
     addMovemement()
   }
