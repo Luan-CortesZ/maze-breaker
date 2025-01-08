@@ -22,8 +22,8 @@ class Button(var posX: Int, var posY: Int, var title: String, var width: Int, va
     val fontRenderContext = new FontRenderContext(null, true, true)
     val fontMetrics = font.getLineMetrics(title, fontRenderContext)
     val textHeight = fontMetrics.getAscent
-    val descent = fontMetrics.getDescent
     val textWidth = font.getStringBounds(title, fontRenderContext).getWidth.toInt
+    val descent = fontMetrics.getDescent
     val textX: Int = posX + (width - textWidth) / 2
     val textY: Int = (posY + (height + textHeight) / 2 - descent.toInt).toInt
 

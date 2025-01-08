@@ -9,8 +9,8 @@ import java.awt.Toolkit
 object Main extends App{
   private val startScreen = new StartScreen("Maze Breaker")
   val screenSize = Toolkit.getDefaultToolkit.getScreenSize
-  val maze: Maze = new Maze(25,25,32)
-  val displayMaze: DisplayMaze = new DisplayMaze(800,800,maze,false,false)
+  val maze: Maze = new Maze(21,21,32)
+  val displayMaze: DisplayMaze = new DisplayMaze(800,700,maze,false,true)
   displayMaze.showWindow()
 
   //Add window listener to startScreen frame

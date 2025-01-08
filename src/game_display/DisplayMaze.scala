@@ -1,9 +1,11 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
+import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
+import java.awt.font.FontRenderContext
 import java.awt.{Color, Font}
 
 class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
@@ -27,6 +29,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
             if(maze.isCellExit(player.getPosX(), player.getPosY() - 1) && maze.isExitLock()){
               doorLockedMessage = true
+            }else if(maze.isCellExit(player.getPosX(), player.getPosY() - 1) && !maze.isExitLock()){
+
             }else{
               player.move(0,-1)
               drawPlayer()
@@ -36,6 +40,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
             if(maze.isCellExit(player.getPosX(), player.getPosY() + 1) && maze.isExitLock()){
               doorLockedMessage = true
+            }else if(maze.isCellExit(player.getPosX(), player.getPosY() + 1) && !maze.isExitLock()){
+
             }else{
               player.move(0, +1)
               drawPlayer()
@@ -45,6 +51,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
             if(maze.isCellExit(player.getPosX() + 1, player.getPosY()) && maze.isExitLock()){
               doorLockedMessage = true
+            }else if(maze.isCellExit(player.getPosX() + 1, player.getPosY()) && !maze.isExitLock()){
+
             }else{
               player.move(+1, 0)
               drawPlayer()
@@ -54,6 +62,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
             if(maze.isCellExit(player.getPosX() - 1, player.getPosY()) && maze.isExitLock()){
               doorLockedMessage = true
+            }else if(maze.isCellExit(player.getPosX() - 1, player.getPosY()) && !maze.isExitLock()){
+
             }else{
               player.move(-1, 0)
               drawPlayer()
@@ -79,12 +89,29 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
         drawMaze()
         drawPlayer()
         if(doorLockedMessage){
-          display.drawString(getXCoordWithOffset(player.getPosX())-50, getYCoordWithOffset(player.getPosY())-20, "The door is locked", new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+          drawTextBox("The door is locked...")
         }
       }
       // FPS sync
       display.syncGameLogic(60)
     }
+  }
+
+  def drawTextBox(text: String): Unit = {
+    display.setColor(Color.WHITE)
+    val font = new Font("Sans Serif", 0, maze.cellSize/2)
+    val fontRenderContext = new FontRenderContext(null, true, true)
+    val fontMetrics = font.getLineMetrics(text, fontRenderContext)
+    val textHeight = fontMetrics.getAscent.toInt
+    val textWidth = font.getStringBounds(text, fontRenderContext).getWidth.toInt
+    val rectWidth = textWidth+10
+    val rectHeight = textHeight+10
+    val posX = getXCoordWithOffset(player.getPosX())-rectWidth/2+maze.cellSize/2
+    val posY = getYCoordWithOffset(player.getPosY())-rectHeight
+    val descent = fontMetrics.getDescent
+    val textX: Int = posX + (rectWidth - textWidth) / 2
+    display.drawFillRect(posX, posY, rectWidth, rectHeight)
+    display.drawString(textX, posY, text, font, new Color(0,0,0), 1,1)
   }
 
   /**
