@@ -1,5 +1,7 @@
 package src.game_class
 
+import src.game_display.Image
+
 import scala.collection.mutable
 import scala.util.Random
 
@@ -8,7 +10,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     Console.err.println("the labyrinth must have an odd length and width")
     sys.exit()
   }
-
+  val image: Image = new Image()
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
   var entry: (Int, Int) = (0, 1) //Coord of the entry
@@ -135,8 +137,9 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
   def openExitIfPlayerOnKey(x: Int, y: Int): Unit = {
     if(grid(x)(y).getClass.getSimpleName.equals("Key")){
-      grid(exit._1)(exit._2).asInstanceOf[Exit].isLock = false
+      grid(exit._1)(exit._2).asInstanceOf[Exit].unLock()
       grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
+      grid(x)(y).setImage(image.lstGroundPictures.head)
     }
   }
 
