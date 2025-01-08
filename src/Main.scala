@@ -34,14 +34,15 @@ object Main extends App {
 
     }
   })
-  // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans une liste
-  // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question
+  // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans un tableau
+  // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question => OK
 
   def readQuestion(): Unit = {
-    val filename = "/questions/Questions.txt"
+    val filename = "src/questions/Questions.txt"
     val src: BufferedSource = Source.fromFile(filename)
 
-    // var questionStock: Array[Question] = new Array[Question](src.length)
+
+    var questionStock2: Array[Question] = new Array[Question](src.length)
     var questionStock: Array[String] = new Array[String](src.length)
     var index = 0
 

@@ -43,6 +43,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           }
         }
         maze.openExitIfPlayerOnKey(player.posX, player.posY)
+        maze.caseEvent(player.posX, player.posY)
     }})
 
     while (true) {
@@ -52,7 +53,6 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
         drawMaze()
         drawPlayer()
       }
-      
       // FPS sync
       display.syncGameLogic(60)
     }
