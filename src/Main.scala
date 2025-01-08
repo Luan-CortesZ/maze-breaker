@@ -1,16 +1,17 @@
 package src
 
-import src.game_class.Maze
+import src.game_class.{Maze, Question}
 import src.game_display.{DisplayMaze, StartScreen}
 
 import java.awt.event.{WindowEvent, WindowListener}
 import java.awt.Toolkit
+import scala.io.{BufferedSource, Source}
 
-object Main extends App{
+object Main extends App {
   private val startScreen = new StartScreen("Maze Breaker")
   val screenSize = Toolkit.getDefaultToolkit.getScreenSize
-  val maze: Maze = new Maze(25,25,32)
-  val displayMaze: DisplayMaze = new DisplayMaze(800,800,maze,false,false)
+  val maze: Maze = new Maze(25, 25, 16)
+  val displayMaze: DisplayMaze = new DisplayMaze(800, 800, maze, false, true)
   displayMaze.showWindow()
 
   //Add window listener to startScreen frame
@@ -30,10 +31,32 @@ object Main extends App{
     //When window closed
     //Create the maze and display it
     override def windowDeactivated(e: WindowEvent): Unit = {
+
     }
   })
+  // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans une liste
+  // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question
 
+  def readQuestion(): Unit = {
+    val filename = "/questions/Questions.txt"
+    val src: BufferedSource = Source.fromFile(filename)
 
+    // var questionStock: Array[Question] = new Array[Question](src.length)
+    var questionStock: Array[String] = new Array[String](src.length)
+    var index = 0
+
+    def lectureFichier(): Unit = {
+      try {
+        for (line <- src.getLines()) {
+          questionStock(index) = line
+          index += 1
+        }
+        src.close()
+      } catch {
+        case e: Exception => println("fichier non trouvé")
+      }
+    }
+  }
 
 
 

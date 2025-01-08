@@ -119,6 +119,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
         else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
         else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
         else if (cell.getClass.getSimpleName.equals("Key")) new Color(255, 255, 0)
+        else if (cell.getClass.getSimpleName.equals("EventQuestions")) new Color(255, 0, 255)
         else baseColor
       } else baseColor
 
