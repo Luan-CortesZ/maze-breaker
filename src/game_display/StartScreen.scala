@@ -15,23 +15,24 @@ class StartScreen(var display: FunGraphics) {
   private var onGameStartCallback: () => Unit = () => {}
   var startGame: Boolean = false;
   val background = new GraphicsBitmap("/src/res/menu.png")
-
-  display.drawTransformedPicture(300,400,0,0.3,background)
+  val center = display.width / 2
+  display.clear(Color.black)
+  display.drawTransformedPicture(center,center,0,display.width/background.getWidth,background)
 
   createButtons()
   displayStartScreen()
 
   private def createButtons(): Unit = {
-    val buttonWidth = 300
-    val buttonHeight = 120
+    val buttonWidth = 250
+    val buttonHeight = 100
 
     val centerX = (display.width - buttonWidth) / 2
 
-    val btnStartY = (display.height / 2) - buttonHeight - 5
-    val btnExitY = (display.height / 2) + 5
+    val btnStartY = (display.height / 2) - buttonHeight
+    val btnExitY = (display.height / 2) + 15
 
-    btnStart = new Button(centerX, btnStartY, "START", buttonWidth, buttonHeight, display)
-    btnExit = new Button(centerX, btnExitY, "EXIT", buttonWidth, buttonHeight, display)
+    btnStart = new Button(centerX, btnStartY + 50, "START", buttonWidth, buttonHeight, display)
+    btnExit = new Button(centerX, btnExitY + 50, "EXIT", buttonWidth, buttonHeight, display)
   }
 
   private def displayStartScreen() : Unit = {
@@ -43,8 +44,8 @@ class StartScreen(var display: FunGraphics) {
   }
 
   private def displayButtons(): Unit = {
-    btnExit.displayButton(Color.black, Color.white, 75f)
-    btnStart.displayButton(Color.black, Color.white, 75f)
+    btnExit.displayButton(new Color(42,34,88), Color.white, 60f)
+    btnStart.displayButton(new Color(42,34,88), Color.white, 60f)
   }
 
   // Mouse listener to click on button

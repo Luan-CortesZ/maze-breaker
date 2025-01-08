@@ -13,7 +13,11 @@ class Button(var posX: Int, var posY: Int, var title: String, var width: Int, va
    * @param color button's color
    * @param textSize text size
    */
-  def displayButton(buttonColor: Color, textColor: Color, textSize: Float): Unit = {
+  def displayButton(buttonColor: Color, textColor: Color, textSize: Float, border: Boolean = true): Unit = {
+    if(border){
+      display.setColor(Color.black)
+      display.drawFillRect(posX, posY, width+10, height+10)
+    }
     display.setColor(buttonColor)
     display.drawFillRect(posX, posY, width, height)
     val font = new CustomFont().upheaval.deriveFont(Font.PLAIN, textSize)
