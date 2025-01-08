@@ -1,6 +1,7 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
+import hevs.graphics.utils.GraphicsBitmap
 import src.fonts.CustomFont
 import src.game_class.Maze
 
@@ -13,8 +14,9 @@ class StartScreen(var display: FunGraphics) {
   private var btnExit: Button = _
   private var onGameStartCallback: () => Unit = () => {}
   var startGame: Boolean = false;
+  val background = new GraphicsBitmap("/src/res/menu.png")
 
-  
+  display.drawTransformedPicture(300,400,0,0.3,background)
 
   createButtons()
   displayStartScreen()
@@ -33,7 +35,6 @@ class StartScreen(var display: FunGraphics) {
   }
 
   private def displayStartScreen() : Unit = {
-    displayTitle()
     displayButtons()
   }
 
@@ -44,20 +45,6 @@ class StartScreen(var display: FunGraphics) {
   private def displayButtons(): Unit = {
     btnExit.displayButton(Color.black, Color.white, 75f)
     btnStart.displayButton(Color.black, Color.white, 75f)
-  }
-
-  /**
-   * Display window title
-   */
-  private def displayTitle(): Unit = {
-    val text: String = "Maze Breaker"
-    val font = new CustomFont().upheaval.deriveFont(Font.PLAIN, 90f)
-    val stringSize = display.getStringSize(text, font)
-
-    val centerX = ((display.width - stringSize.getWidth) / 2).toInt
-    val centerY = ((display.height / 2) - stringSize.getHeight - 200).toInt
-
-    display.drawString(centerX,centerY,text, font, Color.black)
   }
 
   // Mouse listener to click on button
