@@ -10,6 +10,7 @@ import hevs.graphics.utils.GraphicsBitmap
  */
 class Cell(var size: Int, var isWall: Boolean = true, var number: Int = 0, var distanceFromExit: Int = -1, var isPathToExit: Boolean = false) {
   var image: GraphicsBitmap = _
+  var hasTorch: Boolean = false
 
   def setImage(newImage: GraphicsBitmap): Unit = {
     image = newImage

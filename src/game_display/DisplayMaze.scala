@@ -41,6 +41,9 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
           cellImage = image.keyPicture
         }
       }
+      if(maze.grid(x)(y).isWall && maze.isWallInsideMaze(x,y) && Random.nextInt(3) == 1){
+        maze.grid(x)(y).hasTorch = true
+      }
       maze.grid(x)(y).setImage(cellImage)
     }
   }
@@ -142,6 +145,11 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
 
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
+
+      if(cell.hasTorch){
+        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.torch)
+      }
+
       display.setColor(finalColor)
       /*
       //Show number assigned to cell

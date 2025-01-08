@@ -8,6 +8,7 @@ class Image {
   val opened_door = new GraphicsBitmap("/src/res/maze/opened_door.png")
   val locked_door = new GraphicsBitmap("/src/res/maze/locked_door.png")
   val entry_door = new GraphicsBitmap("/src/res/maze/entry_door.png")
+  val torch = new GraphicsBitmap("/src/res/maze/torch.png")
   val playerLeft = new GraphicsBitmap("/src/res/player/left.png")
   val playerRight = new GraphicsBitmap("/src/res/player/right.png")
   val playerTop = new GraphicsBitmap("/src/res/player/top.png")

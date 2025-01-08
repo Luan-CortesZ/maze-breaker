@@ -161,6 +161,14 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     cell
   }
 
+  def isWallInsideMaze(x: Int, y: Int): Boolean = {
+    if(x > 0 && x < width-1 && y > 0 && y < height - 1){
+      true
+    }else{
+      false
+    }
+  }
+
   /**
    * Get random wall in the maze
    * @return coord of random wall
@@ -264,7 +272,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(x)(y).distanceFromExit = -1
     }
   }
-
 
   /**
    * Solve maze
