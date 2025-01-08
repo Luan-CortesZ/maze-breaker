@@ -12,7 +12,3 @@
     - Bonne réponse : Vous recevez un bonus.
     - Mauvaise réponse : Vous subissez un malus.
 - **Vue limitée** : Le joueur ne peut voir qu'une partie du labyrinthe autour de sa position, renforçant l'immersion et la difficulté.
-
-## 📜 Licence
-
-Ce projet est sous licence MIT. Consultez le fichier `LICENSE` pour plus d'informations.
