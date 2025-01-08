@@ -258,7 +258,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
   }
 
-  def resetDistance(): Unit = {
+  private def resetDistance(): Unit = {
     for(x <- grid.indices;
         y <- grid(x).indices){
       grid(x)(y).distanceFromExit = -1

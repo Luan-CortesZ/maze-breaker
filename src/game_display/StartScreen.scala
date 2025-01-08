@@ -2,20 +2,18 @@ package src.game_display
 
 import hevs.graphics.FunGraphics
 import hevs.graphics.utils.GraphicsBitmap
-import src.fonts.CustomFont
-import src.game_class.Maze
 
 import java.awt.event.{MouseEvent, MouseListener}
-import java.awt.{Color, Font}
+import java.awt.Color
 
 class StartScreen(var display: FunGraphics) {
 
   private var btnStart: Button = _
   private var btnExit: Button = _
   private var onGameStartCallback: () => Unit = () => {}
-  var startGame: Boolean = false;
-  val background = new GraphicsBitmap("/src/res/menu.png")
-  val center = display.width / 2
+  private var startGame: Boolean = false;
+  private val background = new GraphicsBitmap("/src/res/menu.png")
+  private val center = display.width / 2
   display.clear(Color.black)
   display.drawTransformedPicture(center,center,0,display.width/background.getWidth,background)
 

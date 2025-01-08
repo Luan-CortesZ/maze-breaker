@@ -6,7 +6,6 @@ class Exit(var isLock: Boolean = true) extends Cell{
   val images: Image = new Image()
   def unLock(): Unit = {
     isLock = false;
-    changeImage = true
     image = images.opened_door
   }
 

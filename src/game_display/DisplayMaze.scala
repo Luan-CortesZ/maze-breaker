@@ -5,15 +5,15 @@ import src.game_class.{Cell, Exit, Maze, Player}
 import hevs.graphics.utils.GraphicsBitmap
 
 import java.awt.event.{KeyAdapter, KeyEvent}
-import java.awt.{Color, Font}
+import java.awt.Color
 import scala.util.Random
 
 class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
-  var offsetX: Int = 0
-  var offsetY: Int = 0
+  private var offsetX: Int = 0
+  private var offsetY: Int = 0
   val image: Image = new Image()
-  var player = new Player(0, 1)
-  var playerDirection = 1;
+  private var player = new Player(0, 1)
+  private var playerDirection = 1;
 
 
   def showWindow(): Unit = {
@@ -22,48 +22,49 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     addMovemement()
   }
 
-  def initializeCellImage(): Unit = {
+  private def initializeCellImage(): Unit = {
     // Dessiner les cellules visibles
     for (x <- maze.grid.indices;
          y <- maze.grid(x).indices) {
-      maze.grid(x)(y).setImage(image.lstGroundPictures(Random.nextInt(image.lstGroundPictures.length)))
-      /*if (maze.grid(x)(y).isWall){
-        maze.grid(x)(y).image = image.wallPicture
+      var cellImage: GraphicsBitmap = null
+      if (maze.grid(x)(y).isWall){
+        cellImage = image.wallPicture
       }else if (!maze.grid(x)(y).isWall){
-        maze.grid(x)(y).image = image.lstGroundPictures(Random.nextInt(image.lstGroundPictures.length))
+        cellImage = image.lstGroundPictures(Random.nextInt(image.lstGroundPictures.length))
         if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && maze.grid(x)(y).asInstanceOf[Exit].isLock){
-          maze.grid(x)(y).image =  image.locked_door
+          cellImage = image.locked_door
         }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && !maze.grid(x)(y).asInstanceOf[Exit].isLock){
-          maze.grid(x)(y).image =  image.opened_door
+          cellImage = image.opened_door
         }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Entry")){
-          maze.grid(x)(y).image =  image.entry_door
+          cellImage = image.entry_door
         }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Key")){
-          maze.grid(x)(y).image =  image.keyPicture
+          cellImage = image.keyPicture
         }
-      }*/
+      }
+      maze.grid(x)(y).setImage(cellImage)
     }
   }
 
-  def addMovemement(): Unit = {
+  private def addMovemement(): Unit = {
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
+          if (!maze.isCellAWall(player.getPosX, player.getPosY - 1)){
             player.move(0,-1)
             playerDirection = 1
           }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
+          if(!maze.isCellAWall(player.getPosX, player.getPosY + 1)){
             player.move(0, +1)
             playerDirection = 3
           }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
+          if (!maze.isCellAWall(player.getPosX + 1, player.getPosY)){
             player.move(+1, 0)
             playerDirection = 2
           }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
+          if (!maze.isCellAWall(player.getPosX - 1, player.getPosY)){
             player.move(-1, 0)
             playerDirection = 4
           }
@@ -88,13 +89,13 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   /**
    * Draw maze generated
    */
-  def drawMaze(): Unit = {
+  private def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     if(centerCamera){
       // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
-      offsetX = display.width / 2 - player.getPosX() * maze.cellSize
-      offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+      offsetX = display.width / 2 - player.getPosX * maze.cellSize
+      offsetY = display.height / 2 - player.getPosY * maze.cellSize
     }
 
     // Dessiner les cellules visibles
@@ -104,7 +105,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
-  def drawPlayer(direction: Int): Unit = {
+  private def drawPlayer(direction: Int): Unit = {
     // Dessiner le joueur au centre de la fenêtre
     val centerX = display.width / 2
     val centerY = display.height / 2
@@ -117,7 +118,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     if(centerCamera){
       display.drawTransformedPicture(centerX + maze.cellSize/2, centerY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
     }else{
-      display.drawTransformedPicture(player.getPosX()*maze.cellSize+offsetX + maze.cellSize/2, player.getPosY()*maze.cellSize+offsetY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
+      display.drawTransformedPicture(player.getPosX*maze.cellSize+offsetX + maze.cellSize/2, player.getPosY*maze.cellSize+offsetY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
     }
   }
 
@@ -139,21 +140,8 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
         else new Color(0,0,0)
       }
 
-      if (cell.isWall){
-        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.wallPicture)
-      }else if (!cell.isWall){
-        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
-        if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock){
-          display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.locked_door)
-        }else if (cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock){
-          display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.opened_door)
-        }else if (cell.getClass.getSimpleName.equals("Entry")){
-          display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.entry_door)
-        }else if (cell.getClass.getSimpleName.equals("Key")){
-          display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.keyPicture)
-        }
-      }
-
+      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
+      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
       display.setColor(finalColor)
       /*
       //Show number assigned to cell
