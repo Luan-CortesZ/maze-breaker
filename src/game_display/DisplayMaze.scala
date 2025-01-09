@@ -19,7 +19,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
   var displayQuestion: FunGraphics = _
 
   def showWindow(): Unit = {
-    display = new FunGraphics(width,height, "Maze breaker")
+    display = new FunGraphics(width, height, "Maze breaker")
     player = new Player(maze.entry._1, maze.entry._2)
     addMovemement()
   }
@@ -28,33 +28,34 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
-            player.move(0,-1)
+          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)) {
+            player.move(0, -1)
             drawPlayer()
           }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
+          if (!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)) {
             player.move(0, +1)
             drawPlayer()
           }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
-            player.move(+1, 0)
+          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())) {
+            player.move(1, 0)
             drawPlayer()
           }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
+          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())) {
             player.move(-1, 0)
             drawPlayer()
           }
         }
         maze.openExitIfPlayerOnKey(player.posX, player.posY)
         caseEvent(player.posX, player.posY)
-    }})
+      }
+    })
 
     while (true) {
       // Drawing
-      display.frontBuffer.synchronized{
+      display.frontBuffer.synchronized {
         display.clear(Color.black)
         drawMaze()
         drawPlayer()
@@ -71,7 +72,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
   def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
-    if(centerCamera){
+    if (centerCamera) {
       // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
       offsetX = display.width / 2 - player.getPosX() * maze.cellSize
       offsetY = display.height / 2 - player.getPosY() * maze.cellSize
@@ -89,17 +90,18 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
     display.setColor(Color.RED)
     val centerX = display.width / 2
     val centerY = display.height / 2
-    if(centerCamera){
+    if (centerCamera) {
       display.drawFilledCircle(centerX, centerY, maze.cellSize)
-    }else{
-      display.drawFilledCircle(player.getPosX()*maze.cellSize+offsetX, player.getPosY()*maze.cellSize+offsetY, maze.cellSize)
+    } else {
+      display.drawFilledCircle(player.getPosX() * maze.cellSize + offsetX, player.getPosY() * maze.cellSize + offsetY, maze.cellSize)
     }
   }
 
   /**
    * Draw each cell
-   * @param x coord x of cell
-   * @param y coord y of cell
+   *
+   * @param x    coord x of cell
+   * @param y    coord y of cell
    * @param cell cell to draw
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
@@ -134,24 +136,24 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
     }
 
 
-    }
+  }
 
   // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
   // reépondre à la question affichée
   def caseEvent(x: Int, y: Int): Unit = {
-    if(maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
+    if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
 
       // Créé une nouvelle fenêtre contenant la question et la TextBox
-      displayQuestion = new FunGraphics(350,200, "Event - Question time")
+      displayQuestion = new FunGraphics(350, 200, "Event - Question time")
 
       // Réutilisation de la classe Button pour afficher le texte de la question
-      var btnQuestion: Button = new Button(50, 50,questions(0).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
+      var btnQuestion: Button = new Button(50, 50, questions(0).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
       btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
 
       // Tout marche correctement et comme voulu jusqu'ici (manque random question)
       /* --------------------------------------------------------------------------------------- */
       // Création de la textBox
-      drawTextBox(50,100, "Insérez votre réponse",50,100,displayQuestion)
+      drawTextBox(50, 100, "Insérez votre réponse", 50, 100, displayQuestion)
 
       // ----------------------------
       displayQuestion.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
@@ -161,9 +163,9 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
           contenu += e.getKeyChar
           println(contenu)
           drawClientMenu(contenu)
-          if(e.getKeyCode == KeyEvent.VK_ENTER){
+          if (e.getKeyCode == KeyEvent.VK_ENTER) {
             println("Voici le contenu de la réponse" + contenu)
-            if(contenu.trim == questions(0).answer.trim){
+            if (contenu.trim == questions(0).answer.trim) {
               println("Good answer")
             } else {
               println(s"Mauvaise réponse, voici la bonne réponse : " + questions(0).answer)
@@ -174,35 +176,37 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
       displayQuestion.mainFrame.addKeyListener(charKeyListener)
     }
   }
+
   var contenu: String = ""
+
   def drawTextBox(posX: Int, posY: Int, content: String, width: Int, height: Int, display: FunGraphics, font: Font = defaultFont): Unit = {
 
     display.setColor(Color.WHITE)
     //display.drawFillRect(posX, posY, width, height)
     display.drawFillRect(posX, posY + height, width, height)
     display.drawFillRect(posX + width, posY, width, height)
-    display.drawString(posX + 10, posY, content, font,Color.BLACK)
+    display.drawString(posX + 10, posY, content, font, Color.BLACK)
   }
 
-//  def RecupAnswer(): Unit = {
-//    display.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
-//
-//    charKeyListener = new KeyAdapter {
-//      override def keyPressed(e: KeyEvent): Unit = {
-//        contenu += e.getKeyChar
-//        println("ew")
-//        drawClientMenu(contenu)
-//      }
-//    }
-//    display.mainFrame.addKeyListener(charKeyListener)
-//
-//    display.clear()
-//    drawClientMenu(contenu)
-//  }
+  //  def RecupAnswer(): Unit = {
+  //    display.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
+  //
+  //    charKeyListener = new KeyAdapter {
+  //      override def keyPressed(e: KeyEvent): Unit = {
+  //        contenu += e.getKeyChar
+  //        println("ew")
+  //        drawClientMenu(contenu)
+  //      }
+  //    }
+  //    display.mainFrame.addKeyListener(charKeyListener)
+  //
+  //    display.clear()
+  //    drawClientMenu(contenu)
+  //  }
 
   def drawClientMenu(t: String): Unit = {
     // displayQuestion.clear()
-    drawTextBox(50,100,contenu,50, 100, displayQuestion, defaultFont)
+    drawTextBox(50, 100, contenu, 50, 100, displayQuestion, defaultFont)
   }
 
 
