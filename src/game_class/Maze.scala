@@ -290,15 +290,19 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   private def solve() : Unit = {
     getDistanceFromExit()
-    findPath()
+    findPath(entry._1, entry._2)
   }
 
   /**
    * Find path to exit
    */
-  private def findPath(): Unit = {
-    grid(entry._1)(entry._2).isPathToExit = true
-    var current = entry
+  def findPath(x: Int = 0, y: Int = 0): Unit = {
+    for(x <- grid.indices;
+        y <- grid(x).indices){
+      grid(x)(y).isPathToExit = false
+    }
+
+    var current = (x,y)
 
     //While current cell is not exit cell
     while (current != exit) {
@@ -322,6 +326,8 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(next._1)(next._2).isPathToExit = true
       current = next // Set next cell to current cell
     }
+
+    grid(exit._1)(exit._2).isPathToExit = false
   }
 
   /**

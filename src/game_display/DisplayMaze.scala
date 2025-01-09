@@ -5,7 +5,6 @@ import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player}
 import hevs.graphics.utils.GraphicsBitmap
 import src.Main
-import src.Main.{displayMaze, doorLockedMessage, maze}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.Color
@@ -18,7 +17,8 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   private var offsetY: Int = 0
   val image: Image = new Image()
   private var player = new Player(0, 1)
-
+  var doorLockedMessage: Boolean = false;
+  var finishGame = false;
   def showWindow(): Unit = {
     player = new Player(maze.entry._1, maze.entry._2)
     initializeCellImage()
@@ -59,16 +59,18 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
       if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock()){
         doorLockedMessage = true
       }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock()){
-
+        player.move(movX,movY)
+        finishGame = true
       }else{
         player.move(movX,movY)
       }
     }
+    maze.findPath(player.posX, player.posY)
     maze.openExitIfPlayerOnKey(player.posX, player.posY)
   }
 
-  def showNotif(doorLocked: Boolean): Unit = {
-    if(doorLocked){
+  def showNotif(): Unit = {
+    if(doorLockedMessage){
       drawTextBox("The door is locked...")
     }
   }
@@ -117,6 +119,10 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
+  def showPath(): Unit = {
+
+  }
+
   def drawPlayer(direction: Int): Unit = {
     // Dessiner le joueur au centre de la fenêtre
     val centerX = display.width / 2
@@ -155,10 +161,6 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
 
     // Vérifier si la cellule est dans la zone visible avant de la dessiner
     if (drawX + cell.size >= 0 && drawX <= display.width && drawY + cell.size >= 0 && drawY <= display.height) {
-      val finalColor = {
-        if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
-        else new Color(0,0,0)
-      }
 
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
@@ -167,7 +169,9 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
         display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.torch)
       }
 
-      display.setColor(finalColor)
+      if(maze.grid(x)(y).isPathToExit && displayPath){
+        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.path)
+      }
       /*
       //Show number assigned to cell
       if(cell.isWall) {
