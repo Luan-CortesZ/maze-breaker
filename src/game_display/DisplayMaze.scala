@@ -3,70 +3,100 @@ package src.game_display
 import hevs.graphics.FunGraphics
 import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player}
+import hevs.graphics.utils.GraphicsBitmap
 
 import java.awt.event.{KeyAdapter, KeyEvent}
+import java.awt.Color
+import scala.util.Random
 import java.awt.font.FontRenderContext
 import java.awt.{Color, Font}
 
-class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
-  var display: FunGraphics = _
-  var offsetX: Int = 0
-  var offsetY: Int = 0
-  var player = new Player(0, 1)
+class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
+  private var offsetX: Int = 0
+  private var offsetY: Int = 0
+  val image: Image = new Image()
+  private var player = new Player(0, 1)
+  private var playerDirection = 1;
   var messageStartTime: Long = 0
   var doorLockedMessage: Boolean = false;
 
   def showWindow(): Unit = {
-    display = new FunGraphics(width,height, "Maze breaker")
     player = new Player(maze.entry._1, maze.entry._2)
+    initializeCellImage()
     addMovemement()
   }
 
-  def addMovemement(): Unit = {
+  private def initializeCellImage(): Unit = {
+    // Dessiner les cellules visibles
+    for (x <- maze.grid.indices;
+         y <- maze.grid(x).indices) {
+      var cellImage: GraphicsBitmap = null
+      if (maze.grid(x)(y).isWall){
+        cellImage = image.wallPicture
+      }else if (!maze.grid(x)(y).isWall){
+        cellImage = image.lstGroundPictures(Random.nextInt(image.lstGroundPictures.length))
+        if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && maze.grid(x)(y).asInstanceOf[Exit].isLock){
+          cellImage = image.locked_door
+        }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && !maze.grid(x)(y).asInstanceOf[Exit].isLock){
+          cellImage = image.opened_door
+        }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Entry")){
+          cellImage = image.entry_door
+        }else if (maze.grid(x)(y).getClass.getSimpleName.equals("Key")){
+          cellImage = image.keyPicture
+        }
+      }
+      if(maze.grid(x)(y).isWall && maze.isWallInsideMaze(x,y) && Random.nextInt(3) == 1){
+        maze.grid(x)(y).hasTorch = true
+      }
+      maze.grid(x)(y).setImage(cellImage)
+    }
+  }
+
+  private def addMovemement(): Unit = {
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)){
-            if(maze.isCellExit(player.getPosX(), player.getPosY() - 1) && maze.isExitLock()){
+          if (!maze.isCellAWall(player.getPosX, player.getPosY - 1)){
+            if(maze.isCellExit(player.getPosX, player.getPosY - 1) && maze.isExitLock()){
               doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX(), player.getPosY() - 1) && !maze.isExitLock()){
+            }else if(maze.isCellExit(player.getPosX, player.getPosY - 1) && !maze.isExitLock()){
 
             }else{
               player.move(0,-1)
-              drawPlayer()
+              playerDirection = 1
             }
           }
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          if(!maze.isCellAWall(player.getPosX(), player.getPosY() + 1)){
-            if(maze.isCellExit(player.getPosX(), player.getPosY() + 1) && maze.isExitLock()){
+          if(!maze.isCellAWall(player.getPosX, player.getPosY + 1)){
+            if(maze.isCellExit(player.getPosX, player.getPosY + 1) && maze.isExitLock()){
               doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX(), player.getPosY() + 1) && !maze.isExitLock()){
+            }else if(maze.isCellExit(player.getPosX, player.getPosY + 1) && !maze.isExitLock()){
 
             }else{
               player.move(0, +1)
-              drawPlayer()
+              playerDirection = 3
             }
           }
         } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          if (!maze.isCellAWall(player.getPosX() + 1, player.getPosY())){
-            if(maze.isCellExit(player.getPosX() + 1, player.getPosY()) && maze.isExitLock()){
+          if (!maze.isCellAWall(player.getPosX + 1, player.getPosY)){
+            if(maze.isCellExit(player.getPosX + 1, player.getPosY) && maze.isExitLock()){
               doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX() + 1, player.getPosY()) && !maze.isExitLock()){
+            }else if(maze.isCellExit(player.getPosX + 1, player.getPosY) && !maze.isExitLock()){
 
             }else{
               player.move(+1, 0)
-              drawPlayer()
+              playerDirection = 2
             }
           }
         } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          if (!maze.isCellAWall(player.getPosX() - 1, player.getPosY())){
-            if(maze.isCellExit(player.getPosX() - 1, player.getPosY()) && maze.isExitLock()){
+          if (!maze.isCellAWall(player.getPosX - 1, player.getPosY)){
+            if(maze.isCellExit(player.getPosX - 1, player.getPosY) && maze.isExitLock()){
               doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX() - 1, player.getPosY()) && !maze.isExitLock()){
+            }else if(maze.isCellExit(player.getPosX - 1, player.getPosY) && !maze.isExitLock()){
 
             }else{
               player.move(-1, 0)
-              drawPlayer()
+              playerDirection = 4
             }
           }
         }
@@ -87,11 +117,12 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
       display.frontBuffer.synchronized{
         display.clear(Color.black)
         drawMaze()
-        drawPlayer()
+        drawPlayer(playerDirection)
         if(doorLockedMessage){
           drawTextBox("The door is locked...")
         }
       }
+
       // FPS sync
       display.syncGameLogic(60)
     }
@@ -106,8 +137,8 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     val textWidth = font.getStringBounds(text, fontRenderContext).getWidth.toInt
     val rectWidth = textWidth+10
     val rectHeight = textHeight+10
-    val posX = getXCoordWithOffset(player.getPosX())-rectWidth/2+maze.cellSize/2
-    val posY = getYCoordWithOffset(player.getPosY())-rectHeight
+    val posX = getXCoordWithOffset(player.getPosX)-rectWidth/2+maze.cellSize/2
+    val posY = getYCoordWithOffset(player.getPosY)-rectHeight
     val descent = fontMetrics.getDescent
     val textX: Int = posX + (rectWidth - textWidth) / 2
     display.drawFillRect(posX, posY, rectWidth, rectHeight)
@@ -117,13 +148,13 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
   /**
    * Draw maze generated
    */
-  def drawMaze(): Unit = {
+  private def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     if(centerCamera){
       // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
-      offsetX = display.width / 2 - player.getPosX() * maze.cellSize
-      offsetY = display.height / 2 - player.getPosY() * maze.cellSize
+      offsetX = display.width / 2 - player.getPosX * maze.cellSize
+      offsetY = display.height / 2 - player.getPosY * maze.cellSize
     }
 
     // Dessiner les cellules visibles
@@ -133,15 +164,20 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     }
   }
 
-  def drawPlayer(): Unit = {
+  private def drawPlayer(direction: Int): Unit = {
     // Dessiner le joueur au centre de la fenêtre
-    display.setColor(Color.RED)
     val centerX = display.width / 2
     val centerY = display.height / 2
+    val playerPicture = direction match {
+      case 1 => image.playerTop
+      case 2 => image.playerRight
+      case 3 => image.playerDown
+      case 4 => image.playerLeft
+    }
     if(centerCamera){
-      display.drawFilledCircle(centerX, centerY, maze.cellSize)
+      display.drawTransformedPicture(centerX + maze.cellSize/2, centerY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
     }else{
-      display.drawFilledCircle(getXCoordWithOffset(player.getPosX()), getYCoordWithOffset(player.getPosY()), maze.cellSize)
+      display.drawTransformedPicture(player.getPosX*maze.cellSize+offsetX + maze.cellSize/2, player.getPosY*maze.cellSize+offsetY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
     }
   }
 
@@ -165,41 +201,32 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
     val drawY = getYCoordWithOffset(y)
 
     // Vérifier si la cellule est dans la zone visible avant de la dessiner
-    if (drawX + cell.size >= 0 && drawX <= display.width &&
-      drawY + cell.size >= 0 && drawY <= display.height) {
-
-      // Couleur de base
-      val baseColor = if (cell.isWall) {
-        if ((x + y) % 2 == 0) new Color(25, 25, 25) else new Color(10, 10, 10)
-      } else {
-        if ((x + y) % 2 == 0) new Color(230, 230, 230) else new Color(205, 205, 205)
+    if (drawX + cell.size >= 0 && drawX <= display.width && drawY + cell.size >= 0 && drawY <= display.height) {
+      val finalColor = {
+        if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
+        else new Color(0,0,0)
       }
 
-      // Couleur finale spécifique
-      val finalColor = if (!cell.isWall) {
-        if (cell.getClass.getSimpleName.equals("Exit") && cell.asInstanceOf[Exit].isLock) new Color(255, 0, 0)
-        else if (cell.getClass.getSimpleName.equals("Exit") && !cell.asInstanceOf[Exit].isLock) new Color(0, 125, 0)
-        else if (cell.getClass.getSimpleName.equals("Entry")) new Color(0, 255, 255)
-        else if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
-        else if (cell.getClass.getSimpleName.equals("Key")) new Color(255, 255, 0)
-        else baseColor
-      } else baseColor
+      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
+      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
+
+      if(cell.hasTorch){
+        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.torch)
+      }
 
       display.setColor(finalColor)
-      display.drawFillRect(drawX, drawY, cell.size, cell.size)
-    }
+      /*
+      //Show number assigned to cell
+      if(cell.isWall) {
+        display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(255,255,255), 1,1)
+      }else{
+        display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+      }
 
-    /*
-    //Show number assigned to cell
-    if(cell.isWall) {
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(255,255,255), 1,1)
-    }else{
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+      //Show distance from exit
+      if(!cell.isWall) {
+        display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+      }*/
     }
-
-    //Show distance from exit
-    if(!cell.isWall) {
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
-    }*/
   }
 }

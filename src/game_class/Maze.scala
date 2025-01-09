@@ -1,5 +1,7 @@
 package src.game_class
 
+import src.game_display.Image
+
 import scala.collection.mutable
 import scala.util.Random
 
@@ -8,7 +10,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     Console.err.println("the labyrinth must have an odd length and width")
     sys.exit()
   }
-
+  val image: Image = new Image()
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
   var entry: (Int, Int) = (0, 1) //Coord of the entry
@@ -147,8 +149,9 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
 
   def openExitIfPlayerOnKey(x: Int, y: Int): Unit = {
     if(grid(x)(y).getClass.getSimpleName.equals("Key")){
-      grid(exit._1)(exit._2).asInstanceOf[Exit].isLock = false
+      grid(exit._1)(exit._2).asInstanceOf[Exit].unLock()
       grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
+      grid(x)(y).setImage(image.lstGroundPictures.head)
     }
   }
 
@@ -168,6 +171,14 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       cell = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
     }while(isCellAWall(cell._1,cell._2) || isCellEntryOrExit(cell._1, cell._2))
     cell
+  }
+
+  def isWallInsideMaze(x: Int, y: Int): Boolean = {
+    if(x > 0 && x < width-1 && y > 0 && y < height - 1){
+      true
+    }else{
+      false
+    }
   }
 
   /**
@@ -267,13 +278,12 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
   }
 
-  def resetDistance(): Unit = {
+  private def resetDistance(): Unit = {
     for(x <- grid.indices;
         y <- grid(x).indices){
       grid(x)(y).distanceFromExit = -1
     }
   }
-
 
   /**
    * Solve maze

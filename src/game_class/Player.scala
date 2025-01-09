@@ -6,8 +6,8 @@ package src.game_class
 
 class Player(var posX: Int, var posY: Int) {
 
-  def getPosX(): Int = posX
-  def getPosY(): Int = posY
+  def getPosX: Int = posX
+  def getPosY: Int = posY
 
   def move(deltaX: Int, deltaY: Int): Unit = {
     posX += deltaX
