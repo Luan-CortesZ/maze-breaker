@@ -8,10 +8,12 @@ import java.awt.Toolkit
 import scala.io.{BufferedSource, Source}
 
 object Main extends App {
+  val questionLue: Array[Question] = lectureFichier()
+
   private val startScreen = new StartScreen("Maze Breaker")
   val screenSize = Toolkit.getDefaultToolkit.getScreenSize
   val maze: Maze = new Maze(25, 25, 16)
-  val displayMaze: DisplayMaze = new DisplayMaze(800, 800, maze, false, true)
+  val displayMaze: DisplayMaze = new DisplayMaze(800, 800, maze, questionLue ,false, true)
   displayMaze.showWindow()
 
   //Add window listener to startScreen frame
@@ -36,29 +38,24 @@ object Main extends App {
   })
   // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans un tableau
   // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question => OK
-
-  def readQuestion(): Unit = {
-    val filename = "src/questions/Questions.txt"
-    val src: BufferedSource = Source.fromFile(filename)
-
-
-    var questionStock2: Array[Question] = new Array[Question](src.length)
-    var questionStock: Array[String] = new Array[String](src.length)
-    var index = 0
-
-    def lectureFichier(): Unit = {
-      try {
-        for (line <- src.getLines()) {
-          questionStock(index) = line
-          index += 1
-        }
-        src.close()
-      } catch {
-        case e: Exception => println("fichier non trouvé")
+  def lectureFichier(): Array[Question] = {
+    var questionStock2: Array[Question] = null
+    var fileContent: Array[String] = null
+    try {
+      val filename = "src/questions/Questions.txt"
+      val src: BufferedSource = Source.fromFile(filename)
+      fileContent = src.getLines().toArray
+      questionStock2 = new Array[Question](fileContent.length)
+      for (line <- fileContent.indices) {
+        questionStock2(line) = new Question(fileContent(line).split(";")(0), fileContent(line).split(";")(1))
       }
-    }
-  }
+      src.close()
 
+    } catch {
+      case e: Exception => e.printStackTrace()
+    }
+    return questionStock2
+  }
 
 
 }

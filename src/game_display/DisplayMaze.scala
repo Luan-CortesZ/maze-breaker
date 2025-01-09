@@ -1,16 +1,22 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
-import src.game_class.{Cell, Exit, Maze, Player}
+import src.game_class.{Cell, Exit, Maze, Player, Question}
 
-import java.awt.event.{KeyAdapter, KeyEvent}
+import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
 import java.awt.{Color, Font}
 
-class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
+class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions: Array[Question], var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   var display: FunGraphics = _
   var offsetX: Int = 0
   var offsetY: Int = 0
   var player = new Player(0, 1)
+
+  private val defaultFont = new Font("SansSerif", Font.PLAIN, 24)
+  var mainMenuMouseListener: MouseAdapter = _
+  var charKeyListener: KeyAdapter = _
+  var gameKeyListener: KeyAdapter = _
+  var displayQuestion: FunGraphics = _
 
   def showWindow(): Unit = {
     display = new FunGraphics(width,height, "Maze breaker")
@@ -43,7 +49,7 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
           }
         }
         maze.openExitIfPlayerOnKey(player.posX, player.posY)
-        maze.caseEvent(player.posX, player.posY)
+        caseEvent(player.posX, player.posY)
     }})
 
     while (true) {
@@ -127,17 +133,91 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var displayPat
       display.drawFillRect(drawX, drawY, cell.size, cell.size)
     }
 
-    /*
-    //Show number assigned to cell
-    if(cell.isWall) {
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(255,255,255), 1,1)
-    }else{
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+
     }
 
-    //Show distance from exit
-    if(!cell.isWall) {
-      display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
-    }*/
+  // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
+  // reépondre à la question affichée
+  def caseEvent(x: Int, y: Int): Unit = {
+    if(maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
+
+      // Créé une nouvelle fenêtre contenant la question et la TextBox
+      displayQuestion = new FunGraphics(350,200, "Event - Question time")
+
+      // Réutilisation de la classe Button pour afficher le texte de la question
+      var btnQuestion: Button = new Button(50, 50,questions(0).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
+      btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
+
+      // Tout marche correctement et comme voulu jusqu'ici (manque random question)
+      /* --------------------------------------------------------------------------------------- */
+      // Création de la textBox
+      drawTextBox(50,100, "Insérez votre réponse",50,100,displayQuestion)
+
+      // ----------------------------
+      displayQuestion.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
+
+      charKeyListener = new KeyAdapter {
+        override def keyPressed(e: KeyEvent): Unit = {
+          contenu += e.getKeyChar
+          println(contenu)
+          drawClientMenu(contenu)
+          if(e.getKeyCode == KeyEvent.VK_ENTER){
+            println("Voici le contenu de la réponse" + contenu)
+            if(contenu.trim == questions(0).answer.trim){
+              println("Good answer")
+            } else {
+              println(s"Mauvaise réponse, voici la bonne réponse : " + questions(0).answer)
+            }
+          }
+        }
+      }
+      displayQuestion.mainFrame.addKeyListener(charKeyListener)
+    }
   }
+  var contenu: String = ""
+  def drawTextBox(posX: Int, posY: Int, content: String, width: Int, height: Int, display: FunGraphics, font: Font = defaultFont): Unit = {
+
+    display.setColor(Color.WHITE)
+    //display.drawFillRect(posX, posY, width, height)
+    display.drawFillRect(posX, posY + height, width, height)
+    display.drawFillRect(posX + width, posY, width, height)
+    display.drawString(posX + 10, posY, content, font,Color.BLACK)
+  }
+
+//  def RecupAnswer(): Unit = {
+//    display.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
+//
+//    charKeyListener = new KeyAdapter {
+//      override def keyPressed(e: KeyEvent): Unit = {
+//        contenu += e.getKeyChar
+//        println("ew")
+//        drawClientMenu(contenu)
+//      }
+//    }
+//    display.mainFrame.addKeyListener(charKeyListener)
+//
+//    display.clear()
+//    drawClientMenu(contenu)
+//  }
+
+  def drawClientMenu(t: String): Unit = {
+    // displayQuestion.clear()
+    drawTextBox(50,100,contenu,50, 100, displayQuestion, defaultFont)
+  }
+
+
+
+  /*
+  //Show number assigned to cell
+  if(cell.isWall) {
+    display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(255,255,255), 1,1)
+  }else{
+    display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+  }
+
+  //Show distance from exit
+  if(!cell.isWall) {
+    display.drawString(x*cell.size+offsetX,y*cell.size+offsetY, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(0,0,0), 1,1)
+  }
+}*/
 }

@@ -7,9 +7,9 @@ import scala.io._
 
 // Stock une seule des questions de la liste et elle vérifie si c'est juste ou non
 
-class Question (var questionAllQuestion: Array[String]) {
-  var questionsDisplay: String = ""
-  var answer: String = ""
+class Question (var questionShowed: String, var answer: String) {
+//  var questionsDisplay: String = ""
+//  var answer: String = ""
 
 
 

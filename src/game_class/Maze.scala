@@ -4,6 +4,7 @@ import hevs.graphics.FunGraphics
 import src.fonts.CustomFont
 import src.game_display.Button
 
+import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
 import java.awt.{Color, Font}
 import scala.collection.mutable
 import scala.util.Random
@@ -13,6 +14,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     Console.err.println("the labyrinth must have an odd length and width")
     sys.exit()
   }
+
 
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
@@ -156,32 +158,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
     }
   }
-
-  var display: FunGraphics = _
-
-  def caseEvent(x: Int, y: Int): Unit = {
-    if(grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
-      println("test de la case event") // print bien le contenu
-
-      // Créé une nouvelle fenêtre contenant la question et la TextBox
-      display = new FunGraphics(500,500, "Test Question")
-      // Réutilisation de la classse Button pour afficher le texte de la question
-      var btnQuestion: Button = new Button(150, 50,"Question", 200, 30, display)
-      btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
-      
-
-
-      // Création de la textBox
-
-//      display.setColor(Color.RED)
-//      display.drawFillRect(90, 90, width, height)
-//
-//      val font = new CustomFont().upheaval.deriveFont(Font.PLAIN, 80)
-//      display.drawString(150, 350, "title", font, Color.black)
-
-    }
-  }
-
 
 
   /**
