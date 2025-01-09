@@ -1,5 +1,11 @@
 package src.game_class
 
+import hevs.graphics.FunGraphics
+import src.fonts.CustomFont
+import src.game_display.Button
+
+import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
+import java.awt.{Color, Font}
 import scala.collection.mutable
 import scala.util.Random
 
@@ -8,6 +14,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     Console.err.println("the labyrinth must have an odd length and width")
     sys.exit()
   }
+
 
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
@@ -98,6 +105,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     complexify()
     initializeEntryAndExit()
     createKey()
+    createEventQuestions()
   }
 
   private def createKey(): Unit = {
@@ -109,6 +117,17 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     keyCell.isPathToExit = grid(cell._1)(cell._2).isPathToExit
     keyCell.isWall = false
     grid(cell._1)(cell._2) = keyCell
+  }
+
+  private def createEventQuestions(): Unit = {
+    val cell: (Int,Int) = getRandomCell
+    val eventQuestions = new EventQuestions()
+    eventQuestions.distanceFromExit = grid(cell._1)(cell._2).distanceFromExit
+    eventQuestions.number = grid(cell._1)(cell._2).number
+    eventQuestions.size = grid(cell._1)(cell._2).size
+    eventQuestions.isPathToExit = grid(cell._1)(cell._2).isPathToExit
+    eventQuestions.isWall = false
+    grid(cell._1)(cell._2) = eventQuestions
   }
 
   private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
@@ -139,6 +158,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
     }
   }
+
 
   /**
    * Complexify maze
