@@ -4,6 +4,8 @@ import hevs.graphics.FunGraphics
 import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player}
 import hevs.graphics.utils.GraphicsBitmap
+import src.Main
+import src.Main.{displayMaze, doorLockedMessage, maze}
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.Color
@@ -16,14 +18,10 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   private var offsetY: Int = 0
   val image: Image = new Image()
   private var player = new Player(0, 1)
-  private var playerDirection = 1;
-  var messageStartTime: Long = 0
-  var doorLockedMessage: Boolean = false;
 
   def showWindow(): Unit = {
     player = new Player(maze.entry._1, maze.entry._2)
     initializeCellImage()
-    addMovemement()
   }
 
   private def initializeCellImage(): Unit = {
@@ -52,85 +50,32 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
-  private def addMovemement(): Unit = {
-    display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          if (!maze.isCellAWall(player.getPosX, player.getPosY - 1)){
-            if(maze.isCellExit(player.getPosX, player.getPosY - 1) && maze.isExitLock()){
-              doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX, player.getPosY - 1) && !maze.isExitLock()){
+  def movePlayer(direction: Int): Unit = {
+    val (movX, movY) = getDirectionCoord(direction)
+    val ifPlayerMoveX = player.getPosX + movX
+    val ifPlayerMoveY = player.getPosY + movY
 
-            }else{
-              player.move(0,-1)
-              playerDirection = 1
-            }
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          if(!maze.isCellAWall(player.getPosX, player.getPosY + 1)){
-            if(maze.isCellExit(player.getPosX, player.getPosY + 1) && maze.isExitLock()){
-              doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX, player.getPosY + 1) && !maze.isExitLock()){
+    if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
+      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock()){
+        doorLockedMessage = true
+      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock()){
 
-            }else{
-              player.move(0, +1)
-              playerDirection = 3
-            }
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          if (!maze.isCellAWall(player.getPosX + 1, player.getPosY)){
-            if(maze.isCellExit(player.getPosX + 1, player.getPosY) && maze.isExitLock()){
-              doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX + 1, player.getPosY) && !maze.isExitLock()){
-
-            }else{
-              player.move(+1, 0)
-              playerDirection = 2
-            }
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          if (!maze.isCellAWall(player.getPosX - 1, player.getPosY)){
-            if(maze.isCellExit(player.getPosX - 1, player.getPosY) && maze.isExitLock()){
-              doorLockedMessage = true
-            }else if(maze.isCellExit(player.getPosX - 1, player.getPosY) && !maze.isExitLock()){
-
-            }else{
-              player.move(-1, 0)
-              playerDirection = 4
-            }
-          }
-        }
-        maze.openExitIfPlayerOnKey(player.posX, player.posY)
-    }})
-
-    while (true) {
-      if (doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
-
-      // Calculer le temps écoulé
-      val currentTime = System.currentTimeMillis
-      if (doorLockedMessage && (currentTime - messageStartTime > 3000)) {
-        doorLockedMessage = false
-        messageStartTime = 0
+      }else{
+        player.move(movX,movY)
       }
+    }
+    maze.openExitIfPlayerOnKey(player.posX, player.posY)
+  }
 
-      // Drawing
-      display.frontBuffer.synchronized{
-        display.clear(Color.black)
-        drawMaze()
-        drawPlayer(playerDirection)
-        if(doorLockedMessage){
-          drawTextBox("The door is locked...")
-        }
-      }
-
-      // FPS sync
-      display.syncGameLogic(60)
+  def showNotif(doorLocked: Boolean): Unit = {
+    if(doorLocked){
+      drawTextBox("The door is locked...")
     }
   }
 
-  def drawTextBox(text: String): Unit = {
+  private def drawTextBox(text: String): Unit = {
     display.setColor(Color.WHITE)
-    val font = new Font("Sans Serif", 0, maze.cellSize/2)
+    val font = new Font(Font.SANS_SERIF, Font.BOLD,16)
     val fontRenderContext = new FontRenderContext(null, true, true)
     val fontMetrics = font.getLineMetrics(text, fontRenderContext)
     val textHeight = fontMetrics.getAscent.toInt
@@ -141,14 +86,13 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     val posY = getYCoordWithOffset(player.getPosY)-rectHeight
     val descent = fontMetrics.getDescent
     val textX: Int = posX + (rectWidth - textWidth) / 2
-    display.drawFillRect(posX, posY, rectWidth, rectHeight)
     display.drawString(textX, posY, text, font, new Color(0,0,0), 1,1)
   }
 
   /**
    * Draw maze generated
    */
-  private def drawMaze(): Unit = {
+  def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     if(centerCamera){
@@ -164,7 +108,16 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
-  private def drawPlayer(direction: Int): Unit = {
+  private def getDirectionCoord(direction: Int): (Int, Int) = {
+    direction match {
+      case 1 => (0,-1)
+      case 2 => (+1, 0)
+      case 3 => (0, +1)
+      case 4 => (-1, 0)
+    }
+  }
+
+  def drawPlayer(direction: Int): Unit = {
     // Dessiner le joueur au centre de la fenêtre
     val centerX = display.width / 2
     val centerY = display.height / 2
