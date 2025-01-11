@@ -1,14 +1,20 @@
 package src.game_class
 
-// Stock position ou la modifier
-
-// Crée deux variables et jouer avec dans la création du curseur
-
-class Player(var posX: Int, var posY: Int) {
+/**
+ * Player class
+ * @param posX coordinate x of player
+ * @param posY coordinate y of player
+ */
+class Player(private var posX: Int, private var posY: Int) {
 
   def getPosX: Int = posX
   def getPosY: Int = posY
 
+  /**
+   * Move player by x and y
+   * @param deltaX offset x to move player horizontally
+   * @param deltaY offset y to move player vertically
+   */
   def move(deltaX: Int, deltaY: Int): Unit = {
     posX += deltaX
     posY += deltaY

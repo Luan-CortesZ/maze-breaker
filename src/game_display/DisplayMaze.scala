@@ -12,13 +12,21 @@ import scala.util.Random
 import java.awt.font.FontRenderContext
 import java.awt.{Color, Font}
 
+/**
+ * Display maze window
+ * @param display fungraphics window
+ * @param maze maze generated
+ * @param displayPath displayPath or not
+ * @param centerCamera centerCamera on player or not
+ */
 class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   private var offsetX: Int = 0
   private var offsetY: Int = 0
-  val image: Image = new Image()
+  private val image: Image = new Image()
   private var player = new Player(0, 1)
-  var doorLockedMessage: Boolean = false;
-  var finishGame = false;
+  private var doorLockedMessage: Boolean = false;
+  private var finishGame = false;
+
   def showWindow(): Unit = {
     player = new Player(maze.entry._1, maze.entry._2)
     initializeCellImage()
@@ -43,38 +51,60 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
           cellImage = image.keyPicture
         }
       }
-      if(maze.grid(x)(y).isWall && maze.isWallInsideMaze(x,y) && Random.nextInt(3) == 1){
+      if(maze.grid(x)(y).isWall && maze.isValidCell(x,y) && Random.nextInt(3) == 1){
         maze.grid(x)(y).hasTorch = true
       }
       maze.grid(x)(y).setImage(cellImage)
     }
   }
 
+  /**
+   * Move player in the maze
+   * @param direction player's direction
+   */
   def movePlayer(direction: Int): Unit = {
+    //Get movex and movey by direction
     val (movX, movY) = getDirectionCoord(direction)
+
+    //Initialize value if player mov in certain direction
     val ifPlayerMoveX = player.getPosX + movX
     val ifPlayerMoveY = player.getPosY + movY
 
+    //Move player only if destination cell is not a wall
     if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
-      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock()){
+      //If destination cell is an exit cell && exit is lock show message
+      //If it's unlock, move player and finish game
+      //Else move player in destination cell
+      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock){
         doorLockedMessage = true
-      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock()){
+      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock){
         player.move(movX,movY)
         finishGame = true
       }else{
         player.move(movX,movY)
       }
     }
-    maze.findPath(player.posX, player.posY)
-    maze.openExitIfPlayerOnKey(player.posX, player.posY)
+
+    //Find the shortest path to exit from player
+    maze.findShortestPath(player.getPosX, player.getPosY)
+
+    //Open exit if player is on key cell
+    maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
   }
 
+  /**
+   * Show message
+   */
   def showNotif(): Unit = {
     if(doorLockedMessage){
       drawTextBox("The door is locked...")
     }
   }
 
+  /**
+   * Draw textbox with message
+   * @param text text to display
+   */
   private def drawTextBox(text: String): Unit = {
     display.setColor(Color.WHITE)
     val font = new Font(Font.SANS_SERIF, Font.BOLD,16)
@@ -92,7 +122,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   }
 
   /**
-   * Draw maze generated
+   * Draw generated maze
    */
   def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
@@ -109,6 +139,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
       drawCell(x, y, maze.grid(x)(y))
     }
   }
+
 
   private def getDirectionCoord(direction: Int): (Int, Int) = {
     direction match {

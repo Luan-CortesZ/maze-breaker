@@ -2,7 +2,11 @@ package src.game_display
 
 import hevs.graphics.utils.GraphicsBitmap
 
+/**
+ * Bank of image
+ */
 class Image {
+  val background = new GraphicsBitmap("/src/res/menu.png")
   val keyPicture = new GraphicsBitmap("/src/res/objects/chest.png")
   val wallPicture = new GraphicsBitmap("/src/res/maze/wall.png")
   val opened_door = new GraphicsBitmap("/src/res/maze/opened_door.png")
