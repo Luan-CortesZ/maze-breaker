@@ -1,25 +1,27 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
+import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player}
 import hevs.graphics.utils.GraphicsBitmap
+import src.Main
 
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.Color
 import scala.util.Random
+import java.awt.font.FontRenderContext
+import java.awt.{Color, Font}
 
 class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   private var offsetX: Int = 0
   private var offsetY: Int = 0
   val image: Image = new Image()
   private var player = new Player(0, 1)
-  private var playerDirection = 1;
-
-
+  var doorLockedMessage: Boolean = false;
+  var finishGame = false;
   def showWindow(): Unit = {
     player = new Player(maze.entry._1, maze.entry._2)
     initializeCellImage()
-    addMovemement()
   }
 
   private def initializeCellImage(): Unit = {
@@ -48,51 +50,51 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
-  private def addMovemement(): Unit = {
-    display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          if (!maze.isCellAWall(player.getPosX, player.getPosY - 1)){
-            player.move(0,-1)
-            playerDirection = 1
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          if(!maze.isCellAWall(player.getPosX, player.getPosY + 1)){
-            player.move(0, +1)
-            playerDirection = 3
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          if (!maze.isCellAWall(player.getPosX + 1, player.getPosY)){
-            player.move(+1, 0)
-            playerDirection = 2
-          }
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          if (!maze.isCellAWall(player.getPosX - 1, player.getPosY)){
-            player.move(-1, 0)
-            playerDirection = 4
-          }
-        }
-        maze.openExitIfPlayerOnKey(player.posX, player.posY)
-    }})
+  def movePlayer(direction: Int): Unit = {
+    val (movX, movY) = getDirectionCoord(direction)
+    val ifPlayerMoveX = player.getPosX + movX
+    val ifPlayerMoveY = player.getPosY + movY
 
-    while (true) {
-      // Drawing
-      display.frontBuffer.synchronized{
-        display.clear(Color.black)
-        drawMaze()
-        drawPlayer(playerDirection)
+    if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
+      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock()){
+        doorLockedMessage = true
+      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock()){
+        player.move(movX,movY)
+        finishGame = true
+      }else{
+        player.move(movX,movY)
       }
-
-      // FPS sync
-      display.syncGameLogic(60)
     }
+    maze.findPath(player.posX, player.posY)
+    maze.openExitIfPlayerOnKey(player.posX, player.posY)
+  }
 
+  def showNotif(): Unit = {
+    if(doorLockedMessage){
+      drawTextBox("The door is locked...")
+    }
+  }
+
+  private def drawTextBox(text: String): Unit = {
+    display.setColor(Color.WHITE)
+    val font = new Font(Font.SANS_SERIF, Font.BOLD,16)
+    val fontRenderContext = new FontRenderContext(null, true, true)
+    val fontMetrics = font.getLineMetrics(text, fontRenderContext)
+    val textHeight = fontMetrics.getAscent.toInt
+    val textWidth = font.getStringBounds(text, fontRenderContext).getWidth.toInt
+    val rectWidth = textWidth+10
+    val rectHeight = textHeight+10
+    val posX = getXCoordWithOffset(player.getPosX)-rectWidth/2+maze.cellSize/2
+    val posY = getYCoordWithOffset(player.getPosY)-rectHeight
+    val descent = fontMetrics.getDescent
+    val textX: Int = posX + (rectWidth - textWidth) / 2
+    display.drawString(textX, posY, text, font, new Color(0,0,0), 1,1)
   }
 
   /**
    * Draw maze generated
    */
-  private def drawMaze(): Unit = {
+  def drawMaze(): Unit = {
     offsetX = (display.width - maze.GRID_WIDTH) / 2
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     if(centerCamera){
@@ -108,7 +110,20 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
-  private def drawPlayer(direction: Int): Unit = {
+  private def getDirectionCoord(direction: Int): (Int, Int) = {
+    direction match {
+      case 1 => (0,-1)
+      case 2 => (+1, 0)
+      case 3 => (0, +1)
+      case 4 => (-1, 0)
+    }
+  }
+
+  def showPath(): Unit = {
+
+  }
+
+  def drawPlayer(direction: Int): Unit = {
     // Dessiner le joueur au centre de la fenêtre
     val centerX = display.width / 2
     val centerY = display.height / 2
@@ -125,6 +140,14 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
   }
 
+  def getXCoordWithOffset(x: Int): Int = {
+    x*maze.cellSize+offsetX
+  }
+
+  def getYCoordWithOffset(y: Int): Int = {
+    y*maze.cellSize+offsetY
+  }
+
   /**
    * Draw each cell
    * @param x coord x of cell
@@ -133,15 +156,11 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
    */
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     // Calculer les coordonnées de la cellule avec les offsets
-    val drawX = x * cell.size + offsetX
-    val drawY = y * cell.size + offsetY
+    val drawX = getXCoordWithOffset(x)
+    val drawY = getYCoordWithOffset(y)
 
     // Vérifier si la cellule est dans la zone visible avant de la dessiner
     if (drawX + cell.size >= 0 && drawX <= display.width && drawY + cell.size >= 0 && drawY <= display.height) {
-      val finalColor = {
-        if (cell.isPathToExit && displayPath) new Color(0, 255, 0)
-        else new Color(0,0,0)
-      }
 
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
       display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
@@ -150,7 +169,9 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
         display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.torch)
       }
 
-      display.setColor(finalColor)
+      if(maze.grid(x)(y).isPathToExit && displayPath){
+        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.path)
+      }
       /*
       //Show number assigned to cell
       if(cell.isWall) {

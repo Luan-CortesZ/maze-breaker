@@ -113,8 +113,20 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     grid(cell._1)(cell._2) = keyCell
   }
 
+  def isExitLock(): Boolean = {
+    grid(exit._1)(exit._2).asInstanceOf[Exit].isLock
+  }
+
+  def isCellExit(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Exit")
+  }
+
+  def isCellEntry(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Entry")
+  }
+
   private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
-    grid(x)(y).getClass.getSimpleName.equals("Exit") || grid(x)(y).getClass.getSimpleName.equals("Entry")
+    isCellExit(x,y) || isCellEntry(x,y)
   }
 
   /**
@@ -278,15 +290,19 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    */
   private def solve() : Unit = {
     getDistanceFromExit()
-    findPath()
+    findPath(entry._1, entry._2)
   }
 
   /**
    * Find path to exit
    */
-  private def findPath(): Unit = {
-    grid(entry._1)(entry._2).isPathToExit = true
-    var current = entry
+  def findPath(x: Int = 0, y: Int = 0): Unit = {
+    for(x <- grid.indices;
+        y <- grid(x).indices){
+      grid(x)(y).isPathToExit = false
+    }
+
+    var current = (x,y)
 
     //While current cell is not exit cell
     while (current != exit) {
@@ -310,6 +326,8 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(next._1)(next._2).isPathToExit = true
       current = next // Set next cell to current cell
     }
+
+    grid(exit._1)(exit._2).isPathToExit = false
   }
 
   /**
