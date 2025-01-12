@@ -8,23 +8,24 @@ import java.awt.Color
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
 
+/**
+ * Main program
+ */
 object Main extends App{
 
-  private val showPath: Boolean = false
-  private val centerCamera: Boolean = true
-  private val cellMazeSize: Int = 32
-  private val mazeSize: Int = 21
-  private var playerDirection = 1;
-  private var level: Int = 1;
-  private var messageStartTime: Long = 0
-
-  private val display: FunGraphics = new FunGraphics(700,700 ,"Maze-breaker")
-  private var displayMaze: DisplayMaze = _
-  private val startScreen = new StartScreen(display)
+  private val showPath: Boolean = false //Show path to exit to player
+  private val centerCamera: Boolean = true //Center camera to player
+  private val cellMazeSize: Int = 32 //Maze's cell size
+  private val mazeSize: Int = 21 //Maze size row and column
+  private var playerDirection = 1; //Default number direction when starting game
+  private var level: Int = 1; //Default level when starting game
+  private var messageStartTime: Long = 0 //Time to display message
+  private val display: FunGraphics = new FunGraphics(700,700 ,"Maze-breaker") //Global fungraphics
+  private var displayMaze: DisplayMaze = _ //Display maze class
+  private val startScreen = new StartScreen(display) //Starting game class
 
   private val lock: Lock = new ReentrantLock()
   private val condition: Condition = lock.newCondition()
-
   startScreen.setOnGameStart(() => {
     lock.lock()
     try {
@@ -41,10 +42,11 @@ object Main extends App{
     lock.unlock()
   }
 
-  newLevel()
-  displayMaze.showWindow()
-  addMovemement()
+  newLevel() //New level
+  displayMaze.showWindow() //Show maze
+  addMovement() //Add player movement
 
+  //Game loop
   while (true) {
     if (displayMaze.doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
 
@@ -70,13 +72,19 @@ object Main extends App{
     display.syncGameLogic(60)
   }
 
+  /**
+   * Change level
+   */
   private def newLevel(): Unit = {
     val maze: Maze = new Maze(mazeSize,mazeSize,cellMazeSize)
     displayMaze = new DisplayMaze(display,maze,showPath,centerCamera)
     displayMaze.showWindow()
   }
 
-  private def addMovemement(): Unit = {
+  /**
+   * Add movement to player
+   */
+  private def addMovement(): Unit = {
     display.setKeyManager(new KeyAdapter() {
       override def keyPressed(e: KeyEvent): Unit = {
         if(e.getKeyChar == 'p'){
@@ -91,11 +99,7 @@ object Main extends App{
           } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
             playerDirection = 4
           }
-
-
           displayMaze.movePlayer(playerDirection)
-        }
-
-      }})
+        }}})
   }
 }
