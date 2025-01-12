@@ -24,6 +24,8 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
   private val randomGroundPicture = Random.nextInt(image.lstGroundPictures.length)
   private val centerX = display.width / 2
   private val centerY = display.height / 2
+  // Size of the light zone in cells (example: 3x3 or 4x4 cells)
+  var lightZoneRadius = 1 // Number of cells around the player (radius)
 
 
   /**
@@ -57,6 +59,8 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
           cellImage = image.entry_door //Entry door
         } else if (maze.grid(x)(y).getClass.getSimpleName.equals("Key")) {
           cellImage = image.keyPicture //Key picture
+        } else if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
+          cellImage = image.eventPicture //Event picture
         }
       }
       if (maze.grid(x)(y).isWall && maze.isValidCell(x, y) && Random.nextInt(5) == 1) {
@@ -64,16 +68,6 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
       }
       maze.grid(x)(y).setImage(cellImage) //Set cell image
     }
-  }
-
-  while (true) {
-    // Drawing
-    display.frontBuffer.synchronized {
-      display.clear(Color.black)
-
-    }
-    // FPS sync
-    display.syncGameLogic(60)
   }
 
   /**
@@ -176,8 +170,6 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     def drawCell(x: Int, y: Int, cell: Cell): Unit = {
       val drawX = getXCoordWithOffset(x)
       val drawY = getYCoordWithOffset(y)
-      // Size of the light zone in cells (example: 3x3 or 4x4 cells)
-      val lightZoneRadius = 1 // Number of cells around the player (radius)
 
       // Limits in pixels based on the size of the cells
       val lightZonePixel = lightZoneRadius * cell.size

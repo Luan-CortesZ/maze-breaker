@@ -45,10 +45,10 @@ object Main extends App{
   var eventLength: Long = 0
   var moveKeyListener = new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
-      if (isFrozen) return
       if (e.getKeyChar == 'p') {
         displayMaze.displayPath = !displayMaze.displayPath
       } else {
+        if (isFrozen) return
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
           playerDirection = 1
         } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
@@ -131,8 +131,8 @@ object Main extends App{
       if (System.currentTimeMillis() > eventLength + eventStart) {
         step = 1
         isFrozen = false
-        pathView = false
-        dezooom = false
+        displayMaze.displayPath = false
+        displayMaze.lightZoneRadius = 1
       }
       if (!isQuestion) {
         displayMaze.drawMaze()
@@ -238,6 +238,11 @@ object Main extends App{
 
   def bonus(randombonus2: Int): Unit = {
     // Voir le chemin de sortie pdt x temps
+    if (randombonus2 == 1) {
+      displayMaze.displayPath = true
+      eventStart = System.currentTimeMillis()
+      eventLength = 6500 // 5 secondes de bonus
+    }
     // Vitesse x 2
     if (randombonus2 == 2) {
       step = 2
@@ -245,6 +250,11 @@ object Main extends App{
       eventLength = 6500 // 5 secondes de bonus
     }
     // Dezoom
+    if (randombonus2 == 3) {
+      displayMaze.lightZoneRadius = 5
+      eventStart = System.currentTimeMillis()
+      eventLength = 6500 // 5 secondes de bonus
+    }
   }
 
   def malus(randomMalus: Int): Unit = {
@@ -270,6 +280,10 @@ object Main extends App{
       eventLength = 6500 // 5 secondes de bonus
     }
     // Retour à l'entrée du labyrinthe
+    else if(randomMalus == 4){
+      player.setPosX(maze.entry._1)
+      player.setPosY(maze.entry._2)
+    }
   }
 
   // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
@@ -280,7 +294,7 @@ object Main extends App{
       isQuestion = true
       display.mainFrame.addKeyListener(charKeyListener)
       display.mainFrame.removeKeyListener(moveKeyListener)
-      maze.grid(x)(y) = new Cell(maze.grid(x)(y).size, maze.grid(x)(y).isWall, maze.grid(x)(y).number, maze.grid(x)(y).distanceFromExit, maze.grid(x)(y).isPathToExit)
+      maze.triggerQuestionIfPlayerOnEvent(x,y)
     }
   }
 

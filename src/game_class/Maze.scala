@@ -256,6 +256,20 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   }
 
   /**
+   * Open exit if player get key
+   * @param x position x of player
+   * @param y position y of player
+   */
+  def triggerQuestionIfPlayerOnEvent(x: Int, y: Int): Unit = {
+    //If player is on key cell
+    if(grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
+      grid(x)(y) = new Cell(grid(x)(y).size, grid(x)(y).isWall, grid(x)(y).number, grid(x)(y).distanceFromExit, grid(x)(y).isPathToExit)
+      grid(x)(y).setImage(image.lstGroundPictures.head)
+    }
+  }
+
+
+  /**
    * Complex maze
    */
   private def complexMaze(): Unit = {
