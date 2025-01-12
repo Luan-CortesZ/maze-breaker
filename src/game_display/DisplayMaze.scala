@@ -170,7 +170,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     }
     //Is player centered ?
     if(centerCamera){
-      display.drawTransformedPicture(centerX + maze.cellSize/2, centerY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
+      display.drawTransformedPicture(centerX, centerY, 0, maze.cellSize/32, playerPicture)
     }else{
       display.drawTransformedPicture(player.getPosX*maze.cellSize+offsetX + maze.cellSize/2, player.getPosY*maze.cellSize+offsetY + maze.cellSize/2, 0, maze.cellSize/32, playerPicture)
     }
@@ -205,22 +205,22 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     val drawY = getYCoordWithOffset(y)
 
     //Verify if cell is in visible zone before drawing
-    if (drawX + cell.size >= 0 && drawX <= display.width && drawY + cell.size >= 0 && drawY <= display.height) {
+    if (drawX + cell.size >= cell.size && drawX <= display.width-0 && drawY + cell.size >= cell.size && drawY <= display.height-0) {
 
       //draw by default ground picture to have global background
-      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.lstGroundPictures.head)
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures.head)
 
       //Draw cell image
-      display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, cell.image)
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, cell.image)
 
       //Draw torch if cell hasTorch
       if(cell.hasTorch){
-        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.torch)
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.torch)
       }
 
       //Draw path to exit if display path is true and cell is a path to exit
       if(maze.grid(x)(y).isPathToExit && displayPath){
-        display.drawTransformedPicture(drawX + cell.size/2, drawY + cell.size/2, 0, cell.size/32, image.path)
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.path)
       }
 
       //showDistanceFromExit(drawX, drawY, cell)

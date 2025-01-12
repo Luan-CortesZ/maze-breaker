@@ -76,7 +76,9 @@ object Main extends App{
    * Change level
    */
   private def newLevel(): Unit = {
-    val maze: Maze = new Maze(mazeSize,mazeSize,cellMazeSize)
+    var levelMaze: Int = mazeSize*level
+    if(levelMaze % 2 == 0) levelMaze+=1
+    val maze: Maze = new Maze(levelMaze,levelMaze,cellMazeSize)
     displayMaze = new DisplayMaze(display,maze,showPath,centerCamera)
     displayMaze.showWindow()
   }
