@@ -2,9 +2,9 @@ package src.game_display
 
 import hevs.graphics.FunGraphics
 import src.game_class.{Cell, Exit, Maze, Player, Question}
-
 import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
 import java.awt.{Color, Font}
+import scala.util.Random
 
 class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions: Array[Question], var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   var display: FunGraphics = _
@@ -17,6 +17,9 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
   var charKeyListener: KeyAdapter = _
   var gameKeyListener: KeyAdapter = _
   var displayQuestion: FunGraphics = _
+  // val randomNumber = Random.between(0, questions.length)
+  var getIdQuestion: Int = Random.between(0, questions.length)
+
 
   def showWindow(): Unit = {
     display = new FunGraphics(width, height, "Maze breaker")
@@ -147,8 +150,9 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
       displayQuestion = new FunGraphics(350, 200, "Event - Question time")
 
       // Réutilisation de la classe Button pour afficher le texte de la question
-      var btnQuestion: Button = new Button(50, 50, questions(0).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
+      var btnQuestion: Button = new Button(50, 50, questions(getIdQuestion).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
       btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
+
 
       // Tout marche correctement et comme voulu jusqu'ici (manque random question)
       /* --------------------------------------------------------------------------------------- */
@@ -158,6 +162,10 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
       // ----------------------------
       displayQuestion.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
 
+      var btnAnswer: Button = new Button(50, 100, contenu, 50, 100, displayQuestion) // Remplacer le 0 par un nbre random
+      btnAnswer.displayButton(Color.WHITE, Color.BLACK, 20f)
+
+
       charKeyListener = new KeyAdapter {
         override def keyPressed(e: KeyEvent): Unit = {
           contenu += e.getKeyChar
@@ -165,10 +173,11 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
           drawClientMenu(contenu)
           if (e.getKeyCode == KeyEvent.VK_ENTER) {
             println("Voici le contenu de la réponse" + contenu)
-            if (contenu.trim == questions(0).answer.trim) {
+            if (contenu.trim == questions(getIdQuestion).answer.trim) {
               println("Good answer")
+
             } else {
-              println(s"Mauvaise réponse, voici la bonne réponse : " + questions(0).answer)
+              println(s"Mauvaise réponse, voici la bonne réponse : " + questions(getIdQuestion).answer)
             }
           }
         }
