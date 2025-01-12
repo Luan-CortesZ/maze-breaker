@@ -15,19 +15,16 @@ import java.awt.Font
  * @param displayPath displayPath or not
  * @param centerCamera centerCamera on player or not
  */
-class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
+class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze = null, var displayPath: Boolean = false, var centerCamera: Boolean = false) {
   private var offsetX: Int = 0 //OffsetX to center maze
   private var offsetY: Int = 0 //OffsetY to center maze
   private val image: Image = new Image() //Bank of image
-  private var player = new Player(0, 1) //Create player
-  var doorLockedMessage: Boolean = false; //Show door locked message
-  var finishGame = false; //Game is finished
+  private val randomGroundPicture = Random.nextInt(image.lstGroundPictures.length)
 
   /**
    * Show maze in window
    */
   def showWindow(): Unit = {
-    player = new Player(maze.entry._1, maze.entry._2)
     initializeCellImage()
   }
 
@@ -52,7 +49,7 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
           cellImage = image.keyPicture //Key picture
         }
       }
-      if(maze.grid(x)(y).isWall && maze.isValidCell(x,y) && Random.nextInt(3) == 1){
+      if(maze.grid(x)(y).isWall && maze.isValidCell(x,y) && Random.nextInt(5) == 1){
         maze.grid(x)(y).hasTorch = true //Random wall has torch or not
       }
       maze.grid(x)(y).setImage(cellImage) //Set cell image
@@ -60,43 +57,9 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   }
 
   /**
-   * Move player in the maze
-   * @param direction player's direction
-   */
-  def movePlayer(direction: Int): Unit = {
-    //Get movex and movey by direction
-    val (movX, movY) = getDirectionCoord(direction)
-
-    //Initialize value if player mov in certain direction
-    val ifPlayerMoveX = player.getPosX + movX
-    val ifPlayerMoveY = player.getPosY + movY
-
-    //Move player only if destination cell is not a wall
-    if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
-      //If destination cell is an exit cell && exit is lock show message
-      //If it's unlock, move player and finish game
-      //Else move player in destination cell
-      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock){
-        doorLockedMessage = true
-      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock){
-        player.move(movX,movY)
-        finishGame = true
-      }else{
-        player.move(movX,movY)
-      }
-    }
-
-    //Find the shortest path to exit from player
-    maze.findShortestPath(player.getPosX, player.getPosY)
-
-    //Open exit if player is on key cell
-    maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
-  }
-
-  /**
    * Show message
    */
-  def showNotif(): Unit = {
+  def showNotif(doorLockedMessage: Boolean): Unit = {
     if(doorLockedMessage){
       drawTextBox("The door is locked...")
     }
@@ -117,7 +80,6 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     val rectHeight = textHeight+10
     val posX = getXCoordWithOffset(player.getPosX)-rectWidth/2+maze.cellSize/2
     val posY = getYCoordWithOffset(player.getPosY)-rectHeight
-    val descent = fontMetrics.getDescent
     val textX: Int = posX + (rectWidth - textWidth) / 2
     display.drawString(textX, posY, text, font, new Color(0,0,0), 1,1)
   }
@@ -138,20 +100,6 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
     for (x <- maze.grid.indices;
          y <- maze.grid(x).indices) {
       drawCell(x, y, maze.grid(x)(y))
-    }
-  }
-
-  /**
-   * Get coordinate direction with direction number
-   * @param direction direction 1,2,3,4
-   * @return direction coordinate
-   */
-  private def getDirectionCoord(direction: Int): (Int, Int) = {
-    direction match {
-      case 1 => (0,-1)
-      case 2 => (+1, 0)
-      case 3 => (0, +1)
-      case 4 => (-1, 0)
     }
   }
 
@@ -203,9 +151,11 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     val drawX = getXCoordWithOffset(x)
     val drawY = getYCoordWithOffset(y)
+    val lightZone = cell.size*9
 
     //Verify if cell is in visible zone before drawing
-    if (drawX + cell.size >= cell.size && drawX <= display.width-0 && drawY + cell.size >= cell.size && drawY <= display.height-0) {
+    //Else draw maze without detail
+    if (drawX >= lightZone && drawX <= display.width-lightZone && drawY >= lightZone && drawY <= display.height-lightZone) {
 
       //draw by default ground picture to have global background
       display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures.head)
@@ -223,9 +173,25 @@ class DisplayMaze(var display: FunGraphics, var maze: Maze = null, var displayPa
         display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.path)
       }
 
-      //showDistanceFromExit(drawX, drawY, cell)
-      //showAssignedNumber(drawX, drawY, cell)
+      if(cell.hasTorch){
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.torch)
+      }
+    }else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height) {
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures.head)
+      //Draw cell image
+
+      if(cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name){
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures(randomGroundPicture))
+      }else{
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, cell.image)
+      }
+
+      display.setColor(new Color(0, 0, 0, 0.5f))
+      display.drawFillRect(drawX-cell.size/2, drawY-cell.size/2, cell.size, cell.size)
     }
+
+    //showDistanceFromExit(drawX, drawY, cell)
+    //showAssignedNumber(drawX, drawY, cell)
   }
 
   /**

@@ -1,7 +1,7 @@
 package src
 
 import hevs.graphics.FunGraphics
-import src.game_class.Maze
+import src.game_class.{Maze, Player}
 import src.game_display.{DisplayMaze, StartScreen}
 
 import java.awt.Color
@@ -13,6 +13,7 @@ import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
  */
 object Main extends App{
 
+  var maze: Maze = _
   private val showPath: Boolean = false //Show path to exit to player
   private val centerCamera: Boolean = true //Center camera to player
   private val cellMazeSize: Int = 32 //Maze's cell size
@@ -23,6 +24,9 @@ object Main extends App{
   private val display: FunGraphics = new FunGraphics(700,700 ,"Maze-breaker") //Global fungraphics
   private var displayMaze: DisplayMaze = _ //Display maze class
   private val startScreen = new StartScreen(display) //Starting game class
+  private var player = new Player(0, 1) //Create player
+  private var doorLockedMessage: Boolean = false; //Show door locked message
+  private var isGameFinished = false; //Game is finished
 
   private val lock: Lock = new ReentrantLock()
   private val condition: Condition = lock.newCondition()
@@ -42,18 +46,19 @@ object Main extends App{
     lock.unlock()
   }
 
+
   newLevel() //New level
   displayMaze.showWindow() //Show maze
   addMovement() //Add player movement
 
   //Game loop
   while (true) {
-    if (displayMaze.doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
+    if (doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
 
     // Calculer le temps écoulé
     val currentTime = System.currentTimeMillis
-    if (displayMaze.doorLockedMessage && (currentTime - messageStartTime > 3000)) {
-      displayMaze.doorLockedMessage = false
+    if (doorLockedMessage && (currentTime - messageStartTime > 3000)) {
+      doorLockedMessage = false
       messageStartTime = 0
     }
 
@@ -62,10 +67,11 @@ object Main extends App{
       display.clear(Color.black)
       displayMaze.drawMaze()
       displayMaze.drawPlayer(playerDirection)
-      displayMaze.showNotif()
-      if(displayMaze.finishGame){
+      displayMaze.showNotif(doorLockedMessage)
+      if(isGameFinished){
         level+=1
         newLevel()
+        isGameFinished = false
       }
     }
     // FPS sync
@@ -78,9 +84,58 @@ object Main extends App{
   private def newLevel(): Unit = {
     var levelMaze: Int = mazeSize*level
     if(levelMaze % 2 == 0) levelMaze+=1
-    val maze: Maze = new Maze(levelMaze,levelMaze,cellMazeSize)
-    displayMaze = new DisplayMaze(display,maze,showPath,centerCamera)
+    maze = new Maze(levelMaze,levelMaze,cellMazeSize)
+    player = new Player(maze.entry._1, maze.entry._2)
+    displayMaze = new DisplayMaze(display, player, maze, showPath, centerCamera)
     displayMaze.showWindow()
+  }
+
+  /**
+   * Get coordinate direction with direction number
+   * @param direction direction 1,2,3,4
+   * @return direction coordinate
+   */
+  private def getDirectionCoord(direction: Int): (Int, Int) = {
+    direction match {
+      case 1 => (0,-1)
+      case 2 => (+1, 0)
+      case 3 => (0, +1)
+      case 4 => (-1, 0)
+    }
+  }
+
+  /**
+   * Move player in the maze
+   * @param direction player's direction
+   */
+  def movePlayer(direction: Int): Unit = {
+    //Get movex and movey by direction
+    val (movX, movY) = getDirectionCoord(direction)
+
+    //Initialize value if player mov in certain direction
+    val ifPlayerMoveX = player.getPosX + movX
+    val ifPlayerMoveY = player.getPosY + movY
+
+    //Move player only if destination cell is not a wall
+    if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
+      //If destination cell is an exit cell && exit is lock show message
+      //If it's unlock, move player and finish game
+      //Else move player in destination cell
+      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock){
+        doorLockedMessage = true
+      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock){
+        player.move(movX,movY)
+        isGameFinished = true
+      }else{
+        player.move(movX,movY)
+      }
+    }
+
+    //Find the shortest path to exit from player
+    maze.findShortestPath(player.getPosX, player.getPosY)
+
+    //Open exit if player is on key cell
+    maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
   }
 
   /**
@@ -101,7 +156,7 @@ object Main extends App{
           } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
             playerDirection = 4
           }
-          displayMaze.movePlayer(playerDirection)
+          movePlayer(playerDirection)
         }}})
   }
 }
