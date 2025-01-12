@@ -20,7 +20,8 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
   private var offsetY: Int = 0 //OffsetY to center maze
   private val image: Image = new Image() //Bank of image
   private val randomGroundPicture = Random.nextInt(image.lstGroundPictures.length)
-
+  private val centerX = display.width / 2
+  private val centerY = display.height / 2
   /**
    * Show maze in window
    */
@@ -92,8 +93,8 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     offsetY = (display.height - maze.GRID_HEIGHT) / 2
     if(centerCamera){
       // Calculer les offsets dynamiquement pour centrer la vue sur le joueur
-      offsetX = display.width / 2 - player.getPosX * maze.cellSize
-      offsetY = display.height / 2 - player.getPosY * maze.cellSize
+      offsetX = centerX - player.getPosX * maze.cellSize
+      offsetY = centerY - player.getPosY * maze.cellSize
     }
 
     // Dessiner les cellules visibles
@@ -108,8 +109,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
    * @param direction direction to draw player
    */
   def drawPlayer(direction: Int): Unit = {
-    val centerX = display.width / 2
-    val centerY = display.height / 2
+
     val playerPicture = direction match {
       case 1 => image.playerTop
       case 2 => image.playerRight
@@ -151,43 +151,47 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
   private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
     val drawX = getXCoordWithOffset(x)
     val drawY = getYCoordWithOffset(y)
-    val lightZone = cell.size*9
+    // Size of the light zone in cells (example: 3x3 or 4x4 cells)
+    val lightZoneRadius = 1 // Number of cells around the player (radius)
 
-    //Verify if cell is in visible zone before drawing
-    //Else draw maze without detail
-    if (drawX >= lightZone && drawX <= display.width-lightZone && drawY >= lightZone && drawY <= display.height-lightZone) {
+    // Limits in pixels based on the size of the cells
+    val lightZonePixel = lightZoneRadius * cell.size
 
-      //draw by default ground picture to have global background
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures.head)
+    // Check if the cell is in the visible zone
+    if (drawX >= centerX - lightZonePixel &&
+      drawX <= centerX + lightZonePixel &&
+      drawY >= centerY - lightZonePixel &&
+      drawY <= centerY + lightZonePixel) {
 
-      //Draw cell image
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, cell.image)
+      // Draw default ground picture for global background
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures.head)
 
-      //Draw torch if cell hasTorch
-      if(cell.hasTorch){
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.torch)
+      // Draw the cell image
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, cell.image)
+
+      // Draw the torch if the cell contains one
+      if (cell.hasTorch) {
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.torch)
       }
 
-      //Draw path to exit if display path is true and cell is a path to exit
-      if(maze.grid(x)(y).isPathToExit && displayPath){
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.path)
+      // Draw the path to the exit if enabled
+      if (maze.grid(x)(y).isPathToExit && displayPath) {
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.path)
       }
 
-      if(cell.hasTorch){
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.torch)
-      }
-    }else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height) {
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures.head)
-      //Draw cell image
+    } else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height) {
+      // Outside the light zone, draw without details
+      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures.head)
 
-      if(cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name){
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, image.lstGroundPictures(randomGroundPicture))
-      }else{
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size/32, cell.image)
+      if (cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name) {
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures(randomGroundPicture))
+      } else {
+        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, cell.image)
       }
 
-      display.setColor(new Color(0, 0, 0, 0.5f))
-      display.drawFillRect(drawX-cell.size/2, drawY-cell.size/2, cell.size, cell.size)
+      // Apply a shadow to hide details
+      display.setColor(new Color(0, 0, 0, 0.7f))
+      display.drawFillRect(drawX - cell.size / 2, drawY - cell.size / 2, cell.size, cell.size)
     }
 
     //showDistanceFromExit(drawX, drawY, cell)

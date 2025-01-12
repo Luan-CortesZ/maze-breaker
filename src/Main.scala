@@ -13,7 +13,7 @@ import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
  */
 object Main extends App{
 
-  var maze: Maze = _
+  var maze: Maze = _ //Maze
   private val showPath: Boolean = false //Show path to exit to player
   private val centerCamera: Boolean = true //Center camera to player
   private val cellMazeSize: Int = 32 //Maze's cell size
@@ -45,7 +45,6 @@ object Main extends App{
   } finally {
     lock.unlock()
   }
-
 
   newLevel() //New level
   displayMaze.showWindow() //Show maze
