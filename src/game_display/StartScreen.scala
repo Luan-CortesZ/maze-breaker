@@ -11,7 +11,6 @@ class StartScreen(var title: String) {
   val display: FunGraphics = new FunGraphics(500,500, "Maze-breaker | Start")
   private val btnExit = new Button(150, 350,"EXIT", 200, 80, display)
   private val btnStart = new Button(150, 250,"START", 200, 80, display)
-
   displayStartScreen()
 
   private def displayStartScreen() : Unit = {

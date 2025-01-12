@@ -106,6 +106,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     initializeEntryAndExit()
     createKey()
     createEventQuestions()
+    createEventQuestions()
   }
 
   private def createKey(): Unit = {

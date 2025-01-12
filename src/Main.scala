@@ -3,7 +3,7 @@ package src
 import src.game_class.{Maze, Question}
 import src.game_display.{DisplayMaze, StartScreen}
 
-import java.awt.event.{WindowEvent, WindowListener}
+import java.awt.event.{WindowAdapter, WindowEvent, WindowListener}
 import java.awt.Toolkit
 import scala.io.{BufferedSource, Source}
 
@@ -17,25 +17,25 @@ object Main extends App {
   displayMaze.showWindow()
 
   //Add window listener to startScreen frame
-  startScreen.display.mainFrame.addWindowListener(new WindowListener {
-    override def windowOpened(e: WindowEvent): Unit = {}
-
-    override def windowClosing(e: WindowEvent): Unit = {}
-
-    override def windowClosed(e: WindowEvent): Unit = {}
-
-    override def windowIconified(e: WindowEvent): Unit = {}
-
-    override def windowDeiconified(e: WindowEvent): Unit = {}
-
-    override def windowActivated(e: WindowEvent): Unit = {}
+  startScreen.display.mainFrame.addWindowListener(new WindowAdapter {
+//    override def windowOpened(e: WindowEvent): Unit = {}
+//
+//    override def windowClosing(e: WindowEvent): Unit = {}
+//
+//    override def windowClosed(e: WindowEvent): Unit = {}
+//
+//    override def windowIconified(e: WindowEvent): Unit = {}
+//
+//    override def windowDeiconified(e: WindowEvent): Unit = {}
+//
+//    override def windowActivated(e: WindowEvent): Unit = {}
 
     //When window closed
     //Create the maze and display it
     override def windowDeactivated(e: WindowEvent): Unit = {
 
     }
-  })
+  })  
   // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans un tableau
   // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question => OK
   def lectureFichier(): Array[Question] = {

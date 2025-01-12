@@ -10,7 +10,4 @@ import scala.io._
 class Question (var questionShowed: String, var answer: String) {
 //  var questionsDisplay: String = ""
 //  var answer: String = ""
-
-
-
 }

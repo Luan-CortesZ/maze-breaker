@@ -1,7 +1,10 @@
 package src.game_display
 
 import hevs.graphics.FunGraphics
+import src.Main.maze.grid
+import src.fonts.CustomFont
 import src.game_class.{Cell, Exit, Maze, Player, Question}
+
 import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
 import java.awt.{Color, Font}
 import scala.util.Random
@@ -12,24 +15,38 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
   var offsetY: Int = 0
   var player = new Player(0, 1)
 
-  private val defaultFont = new Font("SansSerif", Font.PLAIN, 24)
+  var defaultFont = new Font("SansSerif", Font.PLAIN, 24)
   var mainMenuMouseListener: MouseAdapter = _
   var charKeyListener: KeyAdapter = _
-  var gameKeyListener: KeyAdapter = _
-  var displayQuestion: FunGraphics = _
-  // val randomNumber = Random.between(0, questions.length)
-  var getIdQuestion: Int = Random.between(0, questions.length)
+  charKeyListener =  new KeyAdapter {
+    override def keyPressed(e: KeyEvent): Unit = {
+      if (validChar.contains(e.getKeyChar.toString)){
+        contenu += e.getKeyChar
+      }
+      println(contenu)
 
-
-  def showWindow(): Unit = {
-    display = new FunGraphics(width, height, "Maze breaker")
-    player = new Player(maze.entry._1, maze.entry._2)
-    addMovemement()
+      if (e.getKeyCode == KeyEvent.VK_ENTER) {
+        display.mainFrame.removeKeyListener(charKeyListener)
+        if (contenu.trim == questions(getIdQuestion).answer.trim) {
+          contenu += " - Good answer"
+          bonus(Random.between(0,4))
+        } else {
+          contenu += " - Wrong => Good answer : " + questions(getIdQuestion).answer
+          malus(Random.between(0,5))
+        }
+        Thread.sleep(1500)
+        contenu = ""
+        isQuestion = false
+        display.mainFrame.addKeyListener(moveKeyListener)
+      } else if (e.getKeyCode == KeyEvent.VK_BACK_SPACE ){
+        contenu = contenu.substring(0, math.max(contenu.length - 1, 0))
+      }
+    }
   }
-
-  def addMovemement(): Unit = {
-    display.setKeyManager(new KeyAdapter() {
-      override def keyPressed(e: KeyEvent): Unit = {
+  var moveKeyListener = new KeyAdapter() {
+    override def keyPressed(e: KeyEvent): Unit = {
+      if (isFrozen) return
+      for(_<- 0 until step){
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
           if (!maze.isCellAWall(player.getPosX(), player.getPosY() - 1)) {
             player.move(0, -1)
@@ -51,17 +68,48 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
             drawPlayer()
           }
         }
-        maze.openExitIfPlayerOnKey(player.posX, player.posY)
-        caseEvent(player.posX, player.posY)
       }
-    })
+      maze.openExitIfPlayerOnKey(player.posX, player.posY)
+      caseEvent(player.posX, player.posY)
+    }
+  }
+  var gameKeyListener: KeyAdapter = _
+  var displayQuestion: FunGraphics = _
+  var getIdQuestion: Int = 0
+  var isQuestion: Boolean = false
+  var validChar = Array(".").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
+  var step: Int = 1
+  var eventStart: Long = 0
+  var eventLength: Long = 0
+  var isFrozen = false
+  var pathView = false
+  var dezooom = false
+
+  def showWindow(): Unit = {
+    display = new FunGraphics(width, height, "Maze breaker")
+    player = new Player(maze.entry._1, maze.entry._2)
+    addMovemement()
+  }
+
+  def addMovemement(): Unit = {
+    display.setKeyManager(moveKeyListener)
 
     while (true) {
       // Drawing
       display.frontBuffer.synchronized {
         display.clear(Color.black)
-        drawMaze()
-        drawPlayer()
+        if (System.currentTimeMillis() > eventLength + eventStart){
+          step = 1
+          isFrozen = false
+          pathView = false
+          dezooom = false
+        }
+        if (!isQuestion){
+          drawMaze()
+          drawPlayer()
+        } else{
+          drawQuestion()
+        }
       }
       // FPS sync
       display.syncGameLogic(60)
@@ -142,83 +190,71 @@ class DisplayMaze(width: Int, height: Int, var maze: Maze = null, var questions:
   }
 
   // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
-  // reépondre à la question affichée
+  // répondre à la question affichée
   def caseEvent(x: Int, y: Int): Unit = {
+    getIdQuestion = Random.between(0, questions.length)
     if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
-
-      // Créé une nouvelle fenêtre contenant la question et la TextBox
-      displayQuestion = new FunGraphics(350, 200, "Event - Question time")
-
-      // Réutilisation de la classe Button pour afficher le texte de la question
-      var btnQuestion: Button = new Button(50, 50, questions(getIdQuestion).questionShowed, 200, 30, displayQuestion) // Remplacer le 0 par un nbre random
-      btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
-
-
-      // Tout marche correctement et comme voulu jusqu'ici (manque random question)
-      /* --------------------------------------------------------------------------------------- */
-      // Création de la textBox
-      drawTextBox(50, 100, "Insérez votre réponse", 50, 100, displayQuestion)
-
-      // ----------------------------
-      displayQuestion.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
-
-      var btnAnswer: Button = new Button(50, 100, contenu, 50, 100, displayQuestion) // Remplacer le 0 par un nbre random
-      btnAnswer.displayButton(Color.WHITE, Color.BLACK, 20f)
-
-
-      charKeyListener = new KeyAdapter {
-        override def keyPressed(e: KeyEvent): Unit = {
-          contenu += e.getKeyChar
-          println(contenu)
-          drawClientMenu(contenu)
-          if (e.getKeyCode == KeyEvent.VK_ENTER) {
-            println("Voici le contenu de la réponse" + contenu)
-            if (contenu.trim == questions(getIdQuestion).answer.trim) {
-              println("Good answer")
-
-            } else {
-              println(s"Mauvaise réponse, voici la bonne réponse : " + questions(getIdQuestion).answer)
-            }
-          }
-        }
-      }
-      displayQuestion.mainFrame.addKeyListener(charKeyListener)
+      isQuestion = true
+      display.mainFrame.addKeyListener(charKeyListener)
+      display.mainFrame.removeKeyListener(moveKeyListener)
+      grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
     }
   }
 
   var contenu: String = ""
 
-  def drawTextBox(posX: Int, posY: Int, content: String, width: Int, height: Int, display: FunGraphics, font: Font = defaultFont): Unit = {
-
-    display.setColor(Color.WHITE)
-    //display.drawFillRect(posX, posY, width, height)
-    display.drawFillRect(posX, posY + height, width, height)
-    display.drawFillRect(posX + width, posY, width, height)
-    display.drawString(posX + 10, posY, content, font, Color.BLACK)
+  def bonus(randombonus2: Int): Unit = {
+    // Voir le chemin de sortie pdt x temps
+    // Vitesse x 2
+    if (randombonus2 == 2){
+      step = 2
+      eventStart = System.currentTimeMillis()
+      eventLength = 6500      // 5 secondes de bonus
+    }
+    // Dezoom
+  }
+  def malus(randomMalus: Int): Unit = {
+    // Freeze pdt x temps
+    if (randomMalus == 1){
+      isFrozen = true
+      eventStart = System.currentTimeMillis()
+      eventLength = 6500      // 5 secondes de bonus
+    }
+    // TP Random
+    if(randomMalus == 2){
+      var tmpFound = false
+      while (!tmpFound){
+        var randomX = Random.between(0, grid.length)
+        var randomY = Random.between(0, grid(0).length)
+        tmpFound = !grid(randomX)(randomY).isWall
+        player.posX = randomX
+        player.posY = randomY
+      }
+    } else if (randomMalus == 3){
+      step = 8
+      eventStart = System.currentTimeMillis()
+      eventLength = 6500      // 5 secondes de bonus
+    }
+    // Retour à l'entrée du labyrinthe
   }
 
-  //  def RecupAnswer(): Unit = {
-  //    display.mainFrame.getContentPane.removeMouseListener(mainMenuMouseListener)
-  //
-  //    charKeyListener = new KeyAdapter {
-  //      override def keyPressed(e: KeyEvent): Unit = {
-  //        contenu += e.getKeyChar
-  //        println("ew")
-  //        drawClientMenu(contenu)
-  //      }
-  //    }
-  //    display.mainFrame.addKeyListener(charKeyListener)
-  //
-  //    display.clear()
-  //    drawClientMenu(contenu)
-  //  }
+  def drawTextBox(posX: Int, posY: Int, content: String, width: Int, height: Int, display: FunGraphics, font: Font = defaultFont, backgroundColor: Color = Color.WHITE): Unit = {
 
-  def drawClientMenu(t: String): Unit = {
-    // displayQuestion.clear()
-    drawTextBox(50, 100, contenu, 50, 100, displayQuestion, defaultFont)
+    // display.getStringSize(content,defaultFont).getWidth.floor.toInt + 40
+    var stringSize = display.getStringSize(content,defaultFont).getWidth.floor.toInt + 40
+
+    var btnAnswer: Button = new Button(20, 100, contenu, stringSize, 30, display)
+    btnAnswer.displayButton(Color.WHITE, Color.BLACK, 20f)
   }
 
+  def drawQuestion(): Unit ={
+    // Réutilisation de la classe Button pour afficher le texte de la question
+    var btnQuestion: Button = new Button(20, 50, questions(getIdQuestion).questionShowed, display.getStringSize(questions(getIdQuestion).questionShowed,defaultFont).getWidth.floor.toInt + 40, 30, display)
+    btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
 
+    // Création de la textBox
+    drawTextBox(250, 100, contenu, 300, 100, display)
+  }
 
   /*
   //Show number assigned to cell
