@@ -1,5 +1,6 @@
 package src.game_class
 
-class Key extends Cell{
-
-}
+/**
+ * Class inherited from Cell class to know Key cell
+ */
+class Key extends Cell{}

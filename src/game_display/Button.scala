@@ -3,29 +3,35 @@ package src.game_display
 import hevs.graphics.FunGraphics
 import src.fonts.CustomFont
 
-import java.awt.font.FontRenderContext
 import java.awt.{Color, Font}
 
 class Button(var posX: Int, var posY: Int, var title: String, var width: Int, var height: Int, private var display: FunGraphics) {
 
   /**
-   * display button with text at center
-   * @param color button's color
-   * @param textSize text size
+   * Display button with text at center
+   * @param buttonColor color of button
+   * @param textColor color of text
+   * @param textSize size of text
+   * @param hasBorder if button has border
    */
-  def displayButton(buttonColor: Color, textColor: Color, textSize: Float): Unit = {
+  def displayButton(buttonColor: Color, textColor: Color, textSize: Float, hasBorder: Boolean = true): Unit = {
+    //Show button border
+    if(hasBorder){
+      display.setColor(Color.black) //border color
+      display.drawFillRect(posX, posY, width+10, height+10)
+    }
+
+    //Draw button
     display.setColor(buttonColor)
     display.drawFillRect(posX, posY, width, height)
 
-    // Make text center
+    //Initialize font
     val font = new CustomFont().upheaval.deriveFont(Font.PLAIN, textSize)
-    val fontRenderContext = new FontRenderContext(null, true, true)
-    val fontMetrics = font.getLineMetrics(title, fontRenderContext)
-    val textHeight = fontMetrics.getAscent
-    val descent = fontMetrics.getDescent
-    val textWidth = font.getStringBounds(title, fontRenderContext).getWidth.toInt
-    val textX: Int = posX + (width - textWidth) / 2
-    val textY: Int = (posY + (height + textHeight) / 2 - descent.toInt).toInt
+    val stringSize = display.getStringSize(title, font)
+
+    // Make text center
+    val textX: Int = (posX + (width - stringSize.getWidth) / 2).toInt
+    val textY: Int = (posY + (height + stringSize.getHeight) / 2 - 5).toInt
 
     // Draw centered text
     display.drawString(textX, textY, title, font, textColor)

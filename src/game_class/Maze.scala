@@ -1,29 +1,30 @@
 package src.game_class
 
-import hevs.graphics.FunGraphics
-import src.fonts.CustomFont
-import src.game_display.Button
-
-import java.awt.event.{KeyAdapter, KeyEvent, MouseAdapter, MouseEvent}
-import java.awt.{Color, Font}
+import src.game_display.Image
 import scala.collection.mutable
 import scala.util.Random
 
+/**
+ * Maze class to generate
+ * @param width Width of maze
+ * @param height Height of maze
+ * @param cellSize Cell's size
+ */
 class Maze(width: Int, height: Int, var cellSize: Int = 30) {
+  //Prevent user to create even maze
   if(width % 2 == 0 || height % 2 == 0){
     Console.err.println("the labyrinth must have an odd length and width")
     sys.exit()
   }
-
-
+  val image: Image = new Image() //Get all image
   val GRID_WIDTH: Int = width * cellSize // Width of the grid
   val GRID_HEIGHT: Int = height * cellSize // Heigth of the grid
   var entry: (Int, Int) = (0, 1) //Coord of the entry
   var exit: (Int, Int) = (width-1, height-2) //Coord of the exit
-  val grid: Array[Array[Cell]] = Array.ofDim(width,height) //Maze
+  val grid: Array[Array[Cell]] = Array.ofDim(width,height) //Initialize array to create maze
 
-  generateMaze() // Generate maze
-  solve()
+  generateMaze() //Generate maze
+  solve() //Solve maze to have path from the entry to the exit
 
   /**
    * Verify if specific cell of the maze is a wall or not
@@ -42,14 +43,110 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    * @return true if cell position is valid
    *         false if not
    */
-  private def isValidCell(x: Int, y: Int): Boolean = {
+  def isValidCell(x: Int, y: Int): Boolean = {
     x >= 0 && x < width && y >= 0 && y < height
+  }
+
+  /**
+   * Verify if cell is exit cell or not
+   * @param x coordinate x of cell
+   * @param y coordinate y of cell
+   * @return true if it's an exit cell
+   *         false if not
+   */
+  def isCellExit(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Exit")
+  }
+
+  /**
+   * Verify if cell is entry cell or not
+   * @param x coordinate x of cell
+   * @param y coordinate y of cell
+   * @return true if it's an entry cell
+   *         false if not
+   */
+  private def isCellEntry(x: Int, y: Int): Boolean = {
+    grid(x)(y).getClass.getSimpleName.equals("Entry")
+  }
+
+  /**
+   * Verify if exit cell is lock
+   * @return true if yes
+   *         false if not
+   */
+  def isExitLock: Boolean = {
+    grid(exit._1)(exit._2).asInstanceOf[Exit].isLock
+  }
+
+  /**
+   * Verify if cell is surrounded by wall
+   * @param x coordinate x of cell
+   * @param y coordinate y of cell
+   * @return true if it's the case
+   *         false if not
+   */
+  private def isSurroundedByWalls(x: Int, y: Int): Boolean = {
+    //Initialize list of direction to verify around the cell
+    val directions = List(
+      (0, -1), // Haut
+      (0, 1), // Bas
+      (-1, 0), // Gauche
+      (1, 0) // Droite
+    )
+
+    //Count cell's that are walls
+    directions.count { case (dx, dy) =>
+      val nx = x + dx
+      val ny = y + dy
+      isValidCell(nx, ny) && isCellAWall(nx, ny)
+    } == 3
+  }
+
+  /**
+   * Verify that maze generation is complete
+   * @return true if generation is complete
+   */
+  private def isMazeGenerationFinished: Boolean = {
+    val nb = grid(1)(1).number; //Get one arbitrary number
+
+    //Go through the entire grid and check that all cells have the same number
+    //If not, the generation is not complete.
+    for(x <- 1 until grid.length by 2;
+        y <- 1 until grid(x).length by 2){
+      if(!isCellAWall(x,y) && grid(x)(y).number != nb){
+        return false
+      }
+    }
+    true
+  }
+
+  /**
+   * Verify if cell is exit or entry cell or not
+   * @param x coordinate x of cell
+   * @param y coordinate y of cell
+   * @return true if it's an exit or entry cell
+   *         false if not
+   */
+  private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
+    isCellExit(x,y) || isCellEntry(x,y)
+  }
+
+  /**
+   * Verify if exit cell is far enough the entry
+   * @return true if it's the case
+   *         false if not
+   */
+  private def isExitFarEnough: Boolean = {
+    resetDistance() // Reset cell distance value
+    getDistanceFromExit() //Set distance to cell from entry to exit
+    //Verify if exit cell distance is far enough
+    grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
   }
 
   /**
    * Initialize cells of the grid
    */
-  private def initializeCell(): Unit = {
+  private def initializeCells(): Unit = {
     var nb: Int = 0;
     for (x <- grid.indices; y <- grid(x).indices) {
       grid(x)(y) = new Cell(cellSize, true) //wall cell by default
@@ -62,13 +159,12 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   }
 
   /**
-   * Function that generate maze
+   * Initialize a simple Maze with no entry and exit
+   * and no objects
    */
-  private def generateMaze(): Unit = {
-    initializeCell()
-
+  private def initializeMaze(): Unit = {
     //While maze generator not finished
-    while (!isFinished){
+    while (!isMazeGenerationFinished){
       val (x,y) = getRandomWall
 
       //Verify if coord is a wall
@@ -102,13 +198,26 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
         }
       }
     }
-    complexify()
+  }
+
+  /**
+   * Function that generate maze
+   * Create entry and exit
+   * Create objects
+   */
+  private def generateMaze(): Unit = {
+    initializeCells()
+    initializeMaze()
+    complexMaze()
     initializeEntryAndExit()
     createKey()
     createEventQuestions()
     createEventQuestions()
   }
 
+  /**
+   * Create key in random cell inside the maze
+   */
   private def createKey(): Unit = {
     val cell: (Int,Int) = getRandomCell
     val keyCell = new Key()
@@ -131,46 +240,36 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     grid(cell._1)(cell._2) = eventQuestions
   }
 
-  private def isCellEntryOrExit(x: Int, y: Int): Boolean = {
-    grid(x)(y).getClass.getSimpleName.equals("Exit") || grid(x)(y).getClass.getSimpleName.equals("Entry")
-  }
-
   /**
-   * Verify that maze generation is complete
-   * @return true if generation is complete
+   * Open exit if player get key
+   * @param x position x of player
+   * @param y position y of player
    */
-  private def isFinished: Boolean = {
-    val nb = grid(1)(1).number; //Get one arbitrary number
-
-    //Go through the entire grid and check that all cells have the same number
-    //If not, the generation is not complete.
-    for(x <- 1 until grid.length by 2;
-        y <- 1 until grid(x).length by 2){
-      if(!isCellAWall(x,y) && grid(x)(y).number != nb){
-        return false
-      }
-    }
-    true
-  }
-
   def openExitIfPlayerOnKey(x: Int, y: Int): Unit = {
+    //If player is on key cell
     if(grid(x)(y).getClass.getSimpleName.equals("Key")){
-      grid(exit._1)(exit._2).asInstanceOf[Exit].isLock = false
+      grid(exit._1)(exit._2).asInstanceOf[Exit].unLock() //unlock exit
+      //Transform key cell to normal cell
       grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
+      grid(x)(y).setImage(image.lstGroundPictures.head)
     }
   }
 
-
   /**
-   * Complexify maze
+   * Complex maze
    */
-  private def complexify(): Unit = {
+  private def complexMaze(): Unit = {
+    //transform some walls to path
     for(i <- 0 to width){
       val (x,y) = getRandomWall
       grid(x)(y).isWall = false
     }
   }
 
+  /**
+   * Get random cell that's not a wall or an entry or exit inside the maze
+   * @return coordinate x and y of cell
+   */
   private def getRandomCell: (Int, Int) = {
     var cell: (Int,Int) = (0,0)
     do{
@@ -194,6 +293,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
     (x,y)
   }
+
   /**
    * Initialize random entry and exit
    */
@@ -218,44 +318,31 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     exitCell.size = grid(exit._1)(exit._2).size
     grid(exit._1)(exit._2) = exitCell
     grid(exit._1)(exit._2).isWall = false
-
-  }
-
-  private def isExitFarEnough: Boolean = {
-    resetDistance()
-    getDistanceFromExit()
-    grid(entry._1)(entry._2).distanceFromExit >= grid.flatten.maxBy(_.distanceFromExit).distanceFromExit/2
   }
 
   /**
    * Create random exit inside de maze
    */
-  private def createRandomExit(): Unit = {
+  private def createRandomExit(): Exit = {
+    //Create random exit inside the maze
     do {
-      exit = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
-    } while (!isSurroundedByWalls(exit._1, exit._2) || isCellAWall(exit._1,exit._2))
+      exit = (Random.nextInt(width - 2) + 1, Random.nextInt(height - 2) + 1)
+    } while (!isSurroundedByWalls(exit._1, exit._2) || isCellAWall(exit._1, exit._2))
 
-    def isSurroundedByWalls(x: Int, y: Int): Boolean = {
-      val directions = List(
-        (0, -1), // Haut
-        (0, 1),  // Bas
-        (-1, 0), // Gauche
-        (1, 0)   // Droite
-      )
-
-      // Compter les cellules voisines qui sont des murs
-      directions.count { case (dx, dy) =>
-        val nx = x + dx
-        val ny = y + dy
-        isValidCell(nx,ny) && isCellAWall(nx,ny)
-      } == 3
-    }
+    //Initialize new exit cell
+    val exitCell = new Exit()
+    exitCell.distanceFromExit = grid(exit._1)(exit._2).distanceFromExit
+    exitCell.number = grid(exit._1)(exit._2).number
+    exitCell.isPathToExit = grid(exit._1)(exit._2).isPathToExit
+    exitCell.size = grid(exit._1)(exit._2).size
+    exitCell.isWall = false
+    exitCell
   }
 
   /**
    * Create random entry at border of maze
    */
-  private def createRandomEntry(): Unit = {
+  private def createRandomEntry(): Entry = {
     Random.nextInt(4) match {
       case 0 => // Random entry in left section
         do{
@@ -274,34 +361,56 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
           entry = (Random.nextInt(width), height-1)
         }while(isCellAWall(entry._1,entry._2-1))
     }
+
+    //Initialize cell section
+    val entryCell = new Entry()
+    entryCell.distanceFromExit = grid(entry._1)(entry._2).distanceFromExit
+    entryCell.number = grid(entry._1)(entry._2).number
+    entryCell.size = grid(entry._1)(entry._2).size
+    entryCell.isPathToExit = grid(entry._1)(entry._2).isPathToExit
+    entryCell.isWall = false
+    entryCell
   }
 
-  def resetDistance(): Unit = {
+  /**
+   * reset cell's distance attribute
+   */
+  private def resetDistance(): Unit = {
     for(x <- grid.indices;
         y <- grid(x).indices){
       grid(x)(y).distanceFromExit = -1
     }
   }
 
-
   /**
    * Solve maze
    */
   private def solve() : Unit = {
     getDistanceFromExit()
-    findPath()
+    //Find the shortest path to resolve maze
+    findShortestPath(entry._1, entry._2)
+  }
+
+  /**
+   * reset path to exit attribute to all cell
+   */
+  private def resetPathToExit(): Unit = {
+    for(x <- grid.indices;
+        y <- grid(x).indices){
+      grid(x)(y).isPathToExit = false
+    }
   }
 
   /**
    * Find path to exit
    */
-  private def findPath(): Unit = {
-    grid(entry._1)(entry._2).isPathToExit = true
-    var current = entry
+  def findShortestPath(x: Int = 0, y: Int = 0): Unit = {
+    resetPathToExit()
+    var current = (x,y) //Position x and y at current cell
 
-    //While current cell is not exit cell
+    //While current cell is not equal to exit cell
     while (current != exit) {
-      val (x, y) = current //Get coord of current cell
+      val (x, y) = current //Get coordinate of current cell
 
       //Get neighbors of current cell
       val neighbors = Seq(
@@ -321,6 +430,8 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(next._1)(next._2).isPathToExit = true
       current = next // Set next cell to current cell
     }
+
+    grid(exit._1)(exit._2).isPathToExit = false
   }
 
   /**
