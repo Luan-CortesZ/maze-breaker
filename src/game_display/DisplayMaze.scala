@@ -246,8 +246,6 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
 
 
     def drawTextBox(posX: Int, posY: Int, content: String, height: Int, display: FunGraphics, font: Font = defaultFont, backgroundColor: Color = Color.WHITE): Unit = {
-
-      // display.getStringSize(content,defaultFont).getWidth.floor.toInt + 40
       var stringSize = display.getStringSize(content, defaultFont).getWidth.floor.toInt + 40
 
       var btnAnswer: Button = new Button(posX, posY, content, stringSize, height, display)

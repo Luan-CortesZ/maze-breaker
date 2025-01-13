@@ -24,7 +24,7 @@ object Main extends App{
   private val cellMazeSize: Int = 32 //Maze's cell size
   private val mazeSize: Int = 21 //Maze size row and column
   private var playerDirection = 1; //Default number direction when starting game
-  private var level: Int = 1; //Default level when starting game
+  var level: Int = 1; //Default level when starting game
   private var messageStartTime: Long = 0 //Time to display message
   private val display: FunGraphics = new FunGraphics(700,700 ,"Maze-breaker") //Global fungraphics
   private var displayMaze: DisplayMaze = _ //Display maze class
@@ -61,8 +61,6 @@ object Main extends App{
         for (_ <- 0 until step) {
           movePlayer(playerDirection)
         }
-        caseEvent(player.getPosX, player.getPosY)
-
       }
     }
   }

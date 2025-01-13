@@ -1,6 +1,8 @@
 package src.game_class
 
+import src.Main.level
 import src.game_display.Image
+
 import scala.collection.mutable
 import scala.util.Random
 
@@ -211,8 +213,10 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     complexMaze()
     initializeEntryAndExit()
     createKey()
-    createEventQuestions()
-    createEventQuestions()
+
+    for(i <- 0 to level*6){
+      createEventQuestions()
+    }
   }
 
   /**
