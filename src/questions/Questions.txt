@@ -18,13 +18,3 @@ Quel est la taille d’une adresse IPv4 (en bits) ?;32
 Format d’une adresse IPv6 ?;Hexadécimal
 Quel est le résultat de "Scala".toLowerCase ?;scala
 Quel est le résultat de Array(1, 2, 3).map(_ * 2) ?;[2, 4, 6]
-Quels sont les mots-clés pour gérer les erreurs ?try,catch
-Couche où se situe le routage dans le modèle OSI ?;3
-Quel est l'aire d’un triangle base 4, hauteur 6 ?;12
-Classe d’adresse IP pour un réseau avec 500 hôtes ?:C
-Quel est le résultat de (1 to 3).sum ?;6
-Méthode pour trier une liste en ordre croissant ?;.sorted
-Produit scalaire de (1,2)(1,2) et(3,4)(3,4) ?;11
-Point médian entre (1,2)(1,2) et(5,6)(5,6) ?;(3,4)
-Résoudre 3𝑥+2=11 ?;x=3
-Norme de 𝑢⃗=(3,4)u =(3,4) ?;5
