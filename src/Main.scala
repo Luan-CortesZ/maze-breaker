@@ -38,7 +38,7 @@ object Main extends App{
   var isQuestion: Boolean = false
   var pathView = false
   var dezooom = false
-  var validChar = Array(".", ",").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
+  var validChar = Array(".", ",","[","]").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
   var isFrozen = false
   var step: Int = 1
   var eventStart: Long = 0
@@ -61,6 +61,7 @@ object Main extends App{
         for (_ <- 0 until step) {
           movePlayer(playerDirection)
         }
+        caseEvent(player.getPosX, player.getPosY)
       }
     }
   }

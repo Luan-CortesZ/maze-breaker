@@ -213,7 +213,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     complexMaze()
     initializeEntryAndExit()
     createKey()
-
+    //createEventQuestions()
     for(i <- 0 to level*6){
       createEventQuestions()
     }
