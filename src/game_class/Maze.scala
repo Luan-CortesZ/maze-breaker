@@ -1,5 +1,6 @@
 package src.game_class
 
+import src.Main.level
 import src.game_display.Image
 
 import scala.collection.mutable
@@ -212,6 +213,10 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     complexMaze()
     initializeEntryAndExit()
     createKey()
+    //createEventQuestions()
+    for(i <- 0 to level*6){
+      createEventQuestions()
+    }
   }
 
   /**
@@ -228,6 +233,17 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     grid(cell._1)(cell._2) = keyCell
   }
 
+  private def createEventQuestions(): Unit = {
+    val cell: (Int,Int) = getRandomCell
+    val eventQuestions = new EventQuestions()
+    eventQuestions.distanceFromExit = grid(cell._1)(cell._2).distanceFromExit
+    eventQuestions.number = grid(cell._1)(cell._2).number
+    eventQuestions.size = grid(cell._1)(cell._2).size
+    eventQuestions.isPathToExit = grid(cell._1)(cell._2).isPathToExit
+    eventQuestions.isWall = false
+    grid(cell._1)(cell._2) = eventQuestions
+  }
+
   /**
    * Open exit if player get key
    * @param x position x of player
@@ -242,6 +258,20 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
       grid(x)(y).setImage(image.lstGroundPictures.head)
     }
   }
+
+  /**
+   * Open exit if player get key
+   * @param x position x of player
+   * @param y position y of player
+   */
+  def triggerQuestionIfPlayerOnEvent(x: Int, y: Int): Unit = {
+    //If player is on key cell
+    if(grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
+      grid(x)(y) = new Cell(grid(x)(y).size, grid(x)(y).isWall, grid(x)(y).number, grid(x)(y).distanceFromExit, grid(x)(y).isPathToExit)
+      grid(x)(y).setImage(image.lstGroundPictures.head)
+    }
+  }
+
 
   /**
    * Complex maze

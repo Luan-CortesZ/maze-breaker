@@ -10,6 +10,9 @@ class Player(private var posX: Int, private var posY: Int) {
   def getPosX: Int = posX
   def getPosY: Int = posY
 
+  def setPosX(value: Int): Unit = posX = value
+  def setPosY(value: Int): Unit = posY = value
+
   /**
    * Move player by x and y
    * @param deltaX offset x to move player horizontally

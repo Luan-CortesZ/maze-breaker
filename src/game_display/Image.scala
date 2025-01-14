@@ -8,6 +8,7 @@ import hevs.graphics.utils.GraphicsBitmap
 class Image {
   val background = new GraphicsBitmap("/src/res/menu.png")
   val keyPicture = new GraphicsBitmap("/src/res/objects/chest.png")
+  val eventPicture = new GraphicsBitmap("/src/res/objects/event.png")
   val wallPicture = new GraphicsBitmap("/src/res/maze/wall.png")
   val opened_door = new GraphicsBitmap("/src/res/maze/opened_door.png")
   val locked_door = new GraphicsBitmap("/src/res/maze/locked_door.png")
