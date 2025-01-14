@@ -12,7 +12,7 @@ import scala.util.Random
  * @param height Height of maze
  * @param cellSize Cell's size
  */
-class Maze(width: Int, height: Int, var cellSize: Int = 30) {
+class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
   //Prevent user to create even maze
   if(width % 2 == 0 || height % 2 == 0){
     Console.err.println("the labyrinth must have an odd length and width")
@@ -213,7 +213,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     complexMaze()
     initializeEntryAndExit()
     createKey()
-    //createEventQuestions()
     for(i <- 0 to level*6){
       createEventQuestions()
     }
@@ -272,7 +271,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
     }
   }
 
-
   /**
    * Complex maze
    */
@@ -288,7 +286,7 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
    * Get random cell that's not a wall or an entry or exit inside the maze
    * @return coordinate x and y of cell
    */
-  private def getRandomCell: (Int, Int) = {
+  def getRandomCell: (Int, Int) = {
     var cell: (Int,Int) = (0,0)
     do{
       cell = (Random.nextInt(width-2)+1, Random.nextInt(height-2)+1)
@@ -341,26 +339,17 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
   /**
    * Create random exit inside de maze
    */
-  private def createRandomExit(): Exit = {
+  private def createRandomExit(): Unit = {
     //Create random exit inside the maze
     do {
       exit = (Random.nextInt(width - 2) + 1, Random.nextInt(height - 2) + 1)
     } while (!isSurroundedByWalls(exit._1, exit._2) || isCellAWall(exit._1, exit._2))
-
-    //Initialize new exit cell
-    val exitCell = new Exit()
-    exitCell.distanceFromExit = grid(exit._1)(exit._2).distanceFromExit
-    exitCell.number = grid(exit._1)(exit._2).number
-    exitCell.isPathToExit = grid(exit._1)(exit._2).isPathToExit
-    exitCell.size = grid(exit._1)(exit._2).size
-    exitCell.isWall = false
-    exitCell
   }
 
   /**
    * Create random entry at border of maze
    */
-  private def createRandomEntry(): Entry = {
+  private def createRandomEntry(): Unit = {
     Random.nextInt(4) match {
       case 0 => // Random entry in left section
         do{
@@ -379,15 +368,6 @@ class Maze(width: Int, height: Int, var cellSize: Int = 30) {
           entry = (Random.nextInt(width), height-1)
         }while(isCellAWall(entry._1,entry._2-1))
     }
-
-    //Initialize cell section
-    val entryCell = new Entry()
-    entryCell.distanceFromExit = grid(entry._1)(entry._2).distanceFromExit
-    entryCell.number = grid(entry._1)(entry._2).number
-    entryCell.size = grid(entry._1)(entry._2).size
-    entryCell.isPathToExit = grid(entry._1)(entry._2).isPathToExit
-    entryCell.isWall = false
-    entryCell
   }
 
   /**

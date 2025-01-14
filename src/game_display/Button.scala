@@ -5,6 +5,15 @@ import src.fonts.CustomFont
 
 import java.awt.{Color, Font}
 
+/**
+ * Class button to create custom button in window
+ * @param posX coordinate x of button
+ * @param posY coordinate y of button
+ * @param title text to display in button
+ * @param width width of button
+ * @param height height of button
+ * @param display fungraphics to display button in window
+ */
 class Button(var posX: Int, var posY: Int, var title: String, var width: Int, var height: Int, private var display: FunGraphics) {
 
   /**

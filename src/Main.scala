@@ -1,14 +1,12 @@
 package src
 
 import hevs.graphics.FunGraphics
-import src.game_class.{Cell, Maze, Player, Question}
+import src.game_class.{Maze, Player, Question}
 import src.game_display.{DisplayMaze, StartScreen}
 
 import java.awt.Color
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
-import java.awt.event.{WindowAdapter, WindowEvent, WindowListener}
-import java.awt.Toolkit
 import scala.io.{BufferedSource, Source}
 import scala.util.Random
 
@@ -24,7 +22,6 @@ object Main extends App{
   private val cellMazeSize: Int = 32 //Maze's cell size
   private val mazeSize: Int = 21 //Maze size row and column
   private var playerDirection = 1; //Default number direction when starting game
-  var level: Int = 1; //Default level when starting game
   private var messageStartTime: Long = 0 //Time to display message
   private val display: FunGraphics = new FunGraphics(700,700 ,"Maze-breaker") //Global fungraphics
   private var displayMaze: DisplayMaze = _ //Display maze class
@@ -32,21 +29,32 @@ object Main extends App{
   private var player = new Player(0, 1) //Create player
   private var doorLockedMessage: Boolean = false; //Show door locked message
   private var isGameFinished = false; //Game is finished
-  val questions: Array[Question] = lectureFichier()   // Tableau de questions contenant les questions du fichier
-  var contenu: String = ""
-  var idQuestion: Int = 0
-  var isQuestion: Boolean = false
-  var pathView = false
-  var dezooom = false
-  var validChar = Array(".", ",","[","]").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
-  var isFrozen = false
-  var step: Int = 1
-  var eventStart: Long = 0
-  var eventLength: Long = 0
-  var moveKeyListener = new KeyAdapter() {
+  private val lock: Lock = new ReentrantLock()
+  private val condition: Condition = lock.newCondition()
+  var level: Int = 1; //Default level when starting game
+  private val questions: Array[Question] = readFile()   // Tableau de questions contenant les questions du fichier
+  private var contenu: String = ""
+  private var idQuestion: Int = 0
+  private var isQuestion: Boolean = false
+  private val validChar = Array(".", ",","[","]").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
+  private var isFrozen = false
+  private var step: Int = 1
+  private var eventStart: Long = 0
+  private var eventLength: Long = 0
+  private var allowCustomProperties: Boolean = true
+  private var showAllMaze: Boolean = false
+
+  var moveKeyListener: KeyAdapter = new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
-      if (e.getKeyChar == 'p') {
-        displayMaze.displayPath = !displayMaze.displayPath
+      if (e.getKeyChar == 'p' && allowCustomProperties) {
+        displayMaze.displaySolutionPath()
+      } else if(e.getKeyChar == 'm' && allowCustomProperties){
+        showAllMaze = !showAllMaze
+        displayMaze.displayMaze(showAllMaze)
+      }else if(e.getKeyChar == 'l' && allowCustomProperties){
+        displayMaze.displayDistanceCell()
+      }else if(e.getKeyChar == 'k' && allowCustomProperties){
+        displayMaze.displayAssignedNumber()
       } else {
         if (isFrozen) return
         if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
@@ -65,8 +73,8 @@ object Main extends App{
       }
     }
   }
-  var charKeyListener: KeyAdapter = _
-  charKeyListener = new KeyAdapter {
+
+  var charKeyListener: KeyAdapter = new KeyAdapter {
     override def keyPressed(e: KeyEvent): Unit = {
       if (validChar.contains(e.getKeyChar.toString)) {
         contenu += e.getKeyChar
@@ -74,6 +82,7 @@ object Main extends App{
       println(contenu)
       if (e.getKeyCode == KeyEvent.VK_ENTER) {
         display.mainFrame.removeKeyListener(charKeyListener)
+        allowCustomProperties = false
         if (contenu.trim == questions(idQuestion).answer.trim) {
           contenu += " - Good answer"
           bonus(Random.between(0, 4))
@@ -91,8 +100,6 @@ object Main extends App{
     }
   }
 
-  private val lock: Lock = new ReentrantLock()
-  private val condition: Condition = lock.newCondition()
   startScreen.setOnGameStart(() => {
     lock.lock()
     try {
@@ -110,14 +117,13 @@ object Main extends App{
   }
 
   newLevel() //New level
-  displayMaze.showWindow() //Show maze
   addMovement() //Add player movement
 
   //Game loop
   while (true) {
     if (doorLockedMessage && (messageStartTime == 0)) messageStartTime = System.currentTimeMillis
 
-    // Calculer le temps écoulé
+    // Time spend to show door message
     val currentTime = System.currentTimeMillis
     if (doorLockedMessage && (currentTime - messageStartTime > 3000)) {
       doorLockedMessage = false
@@ -127,16 +133,16 @@ object Main extends App{
     // Drawing
     display.frontBuffer.synchronized{
       display.clear(Color.black)
-      if (System.currentTimeMillis() > eventLength + eventStart) {
-        step = 1
-        isFrozen = false
-        displayMaze.displayPath = false
-        displayMaze.lightZoneRadius = 1
+      if (System.currentTimeMillis() > eventLength + eventStart && !allowCustomProperties) {
+        resetProperties()
+        allowCustomProperties = true
       }
       if (!isQuestion) {
         displayMaze.drawMaze()
         displayMaze.drawPlayer(playerDirection)
         displayMaze.showNotif(doorLockedMessage)
+        displayMaze.displayLevel(level.toString)
+
         if(isGameFinished){
           level+=1
           newLevel()
@@ -151,16 +157,34 @@ object Main extends App{
   }
 
   /**
+   * Add movement to player
+   */
+  private def addMovement(): Unit = {
+    display.setKeyManager(moveKeyListener)
+  }
+
+  /**
+   * Reset malus and bonus properties
+   */
+  private def resetProperties(): Unit = {
+    step = 1
+    isFrozen = false
+    displayMaze.displayMaze(1)
+    displayMaze.displaySolutionPath(false)
+  }
+
+  /**
    * Change level
    */
   private def newLevel(): Unit = {
     var levelMaze: Int = mazeSize*level
-    if(levelMaze % 2 == 0) levelMaze+=1
+    if(levelMaze % 2 == 0) levelMaze+=1 // avoid to have even maze
     maze = new Maze(levelMaze,levelMaze,cellMazeSize)
     player = new Player(maze.entry._1, maze.entry._2)
     displayMaze = new DisplayMaze(display, player, maze, questions ,showPath, centerCamera)
     displayMaze.showWindow()
   }
+
   /**
    * Get coordinate direction with direction number
    * @param direction direction 1,2,3,4
@@ -208,15 +232,10 @@ object Main extends App{
     //Open exit if player is on key cell
     maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
   }
-  /**
-   * Add movement to player
-   */
-  private def addMovement(): Unit = {
-    display.setKeyManager(moveKeyListener)
-  }
+
   // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans un tableau
   // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question => OK
-  def lectureFichier(): Array[Question] = {
+  private def readFile(): Array[Question] = {
     var questionStock2: Array[Question] = null
     var fileContent: Array[String] = null
     try {
@@ -235,28 +254,28 @@ object Main extends App{
     return questionStock2
   }
 
-  def bonus(randombonus2: Int): Unit = {
+  private def bonus(randomBonus: Int): Unit = {
     // Voir le chemin de sortie pdt x temps
-    if (randombonus2 == 1) {
-      displayMaze.displayPath = true
+    if (randomBonus == 1) {
+      displayMaze.displaySolutionPath(true)
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
     // Vitesse x 2
-    if (randombonus2 == 2) {
+    if (randomBonus == 2) {
       step = 2
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
     // Dezoom
-    if (randombonus2 == 3) {
-      displayMaze.lightZoneRadius = 5
+    if (randomBonus == 3) {
+      displayMaze.displayMaze(5)
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
   }
 
-  def malus(randomMalus: Int): Unit = {
+  private def malus(randomMalus: Int): Unit = {
     // Freeze pdt x temps
     if (randomMalus == 1) {
       isFrozen = true
@@ -265,14 +284,9 @@ object Main extends App{
     }
     // TP Random
     if (randomMalus == 2) {
-      var tmpFound = false
-      while (!tmpFound) {
-        var randomX = Random.between(0, maze.grid.length)
-        var randomY = Random.between(0, maze.grid(0).length)
-        tmpFound = !maze.grid(randomX)(randomY).isWall
-        player.setPosX(randomX)
-        player.setPosY(randomY)
-      }
+      val (x,y) = maze.getRandomCell;
+      player.setPosX(x)
+      player.setPosY(y)
     } else if (randomMalus == 3) {
       step = 8
       eventStart = System.currentTimeMillis()
@@ -287,7 +301,7 @@ object Main extends App{
 
   // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
   // répondre à la question affichée
-  def caseEvent(x: Int, y: Int): Unit = {
+  private def caseEvent(x: Int, y: Int): Unit = {
     if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
       idQuestion = Random.between(0, questions.length)
       isQuestion = true
@@ -296,6 +310,4 @@ object Main extends App{
       maze.triggerQuestionIfPlayerOnEvent(x,y)
     }
   }
-
-
 }

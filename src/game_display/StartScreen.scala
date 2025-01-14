@@ -2,7 +2,7 @@ package src.game_display
 
 import hevs.graphics.FunGraphics
 
-import java.awt.event.{MouseEvent, MouseListener}
+import java.awt.event.{MouseAdapter, MouseEvent, MouseListener}
 import java.awt.Color
 
 /**
@@ -64,7 +64,7 @@ class StartScreen(var display: FunGraphics) {
   }
 
   // Mouse listener to click on button
-  display.addMouseListener(new MouseListener {
+  display.addMouseListener(new MouseAdapter {
     //When mouse is clicked
     override def mouseClicked(e: MouseEvent): Unit = {
       //Verify button position and do event
@@ -74,9 +74,5 @@ class StartScreen(var display: FunGraphics) {
         onGameStartCallback() // Notify the callback
       }
     }
-    override def mousePressed(e: MouseEvent): Unit = {}
-    override def mouseReleased(e: MouseEvent): Unit = {}
-    override def mouseEntered(e: MouseEvent): Unit = {}
-    override def mouseExited(e: MouseEvent): Unit = {}
   })
 }
