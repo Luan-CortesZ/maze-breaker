@@ -199,8 +199,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
       } else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height) {
         // Outside the light zone, draw without details
         display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures.head)
-
-        if (cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name) {
+        if (cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name || cell.image.name == image.eventPicture.name) {
           display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures(randomGroundPicture))
         } else {
           display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, cell.image)
