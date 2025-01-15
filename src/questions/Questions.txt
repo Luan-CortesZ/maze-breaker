@@ -1,0 +1,30 @@
+3*3;9
+5*70;350
+9*65;585
+En Scala, comment déclare-t-on une variable mutable ?;var
+Quelle est la plage d'adresses IP privées de classe B ?;172.16.0.0 - 172.31.255.255
+Quel est le port standard pour le protocole HTTPS ?;443
+Quelle est la structure conditionnelle de base en Scala ?;if,else
+Produit scalaire de(2,3)(2,3) et(4,1)(4,1) ?;11
+Distance entre (0, 0) et (3, 4) ?;5
+Taille d’une adresse IPv6 (en bits) ?;128
+Masque de sous-réseau pour /21 ?;255.255.240.0
+Adresse IP de loopback ?;127.0.0.1
+Opérateur pour concaténer deux chaînes ?;+
+Quel est le type d’une variable val x = "Scala" ?;string
+Fonction pour calculer la taille d’un tableau ?;.length
+Résultat de "hello".reverse ?;olleh
+Quel est la taille d’une adresse IPv4 (en bits) ?;32
+Format d’une adresse IPv6 ?;Hexadécimal
+Quel est le résultat de "Scala".toLowerCase ?;scala
+Quel est le résultat de Array(1, 2, 3).map(_ * 2) ?;[2, 4, 6]
+Quels sont les mots-clés pour gérer les erreurs ?;try,catch
+Couche où se situe le routage dans le modèle OSI ?;3
+Quel est l'aire d’un triangle base 4, hauteur 6 ?;12
+Classe d’adresse IP pour un réseau avec 500 hôtes ?;C
+Quel est le résultat de (1 to 3).sum ?;6
+Méthode pour trier une liste en ordre croissant ?;.sorted
+Produit scalaire de (1,2)(1,2) et(3,4)(3,4) ?;11
+Point médian entre (1,2)(1,2) et(5,6)(5,6) ?;(3,4)
+Résoudre 3𝑥+2=11 ?;x=3
+Norme de u (vecteur) (3,4) ?;5
