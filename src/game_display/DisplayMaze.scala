@@ -93,7 +93,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     val posX = getXCoordWithOffset(player.getPosX) - rectWidth / 2 + maze.cellSize / 2
     val posY = getYCoordWithOffset(player.getPosY) - rectHeight
     val textX: Int = posX + (rectWidth - textWidth) / 2
-    display.drawString(textX, posY, text, font, new Color(0, 0, 0), 1, 1)
+    display.drawString(textX, posY, text, font, new Color(255, 255, 255), 1, 1)
   }
 
   /**

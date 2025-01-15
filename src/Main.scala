@@ -44,6 +44,8 @@ object Main extends App{
   private var allowCustomProperties: Boolean = true
   private var showAllMaze: Boolean = false
   private var drawKeyInInventory: Boolean = false
+  private var eventTime: Int = 5000
+  private var textTime: Int = 3000
   var eventSelect: String = ""
   var moveKeyListener: KeyAdapter = new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
@@ -82,7 +84,6 @@ object Main extends App{
       if (validChar.contains(e.getKeyChar.toString)) {
         contenu += e.getKeyChar
       }
-      println(contenu)
       if (e.getKeyCode == KeyEvent.VK_ENTER) {
         display.mainFrame.removeKeyListener(charKeyListener)
         allowCustomProperties = false
@@ -93,7 +94,7 @@ object Main extends App{
           contenu += s" - Wrong => Good answer : ${questions(idQuestion).answer}"
           malus(Random.between(1, 5))
         }
-        Thread.sleep(2000)
+        Thread.sleep(textTime)
         contenu = ""
         eventSelect = ""
         isQuestion = false
@@ -280,21 +281,21 @@ object Main extends App{
       eventSelect = "Show the path to exit"
       displayMaze.displaySolutionPath(true)
       eventStart = System.currentTimeMillis()
-      eventLength = 7000 // 5 secondes de bonus
+      eventLength = textTime+eventTime // 5 secondes de bonus
     }
     // Speed x 2
     else if (randomBonus == 2) {
       step = 2
       eventSelect = "Speed x2"
       eventStart = System.currentTimeMillis()
-      eventLength = 7000 // 5 secondes de bonus
+      eventLength = textTime+eventTime // 5 secondes de bonus
     }
     // Your vision increased to 5x5
     else if (randomBonus == 3) {
       eventSelect = "Your vision increased to 5x5"
       displayMaze.displayMaze(5)
       eventStart = System.currentTimeMillis()
-      eventLength = 7000 // 5 secondes de bonus
+      eventLength = textTime+eventTime // 5 secondes de bonus
     }
   }
 
@@ -308,7 +309,7 @@ object Main extends App{
       isFrozen = true
       eventSelect = "You are now freezed for 5 seconds"
       eventStart = System.currentTimeMillis()
-      eventLength = 7000 // 5 secondes de bonus
+      eventLength = textTime+eventTime // 5 secondes de bonus
     }
     // TP Random
     else if (randomMalus == 2) {
@@ -320,7 +321,7 @@ object Main extends App{
       step = 8
       eventSelect = "Your step are increased to 8"
       eventStart = System.currentTimeMillis()
-      eventLength = 7000 // 5 secondes de bonus
+      eventLength = textTime+eventTime // 5 secondes de bonus
     }
     // Retour à l'entrée du labyrinthe
     else if(randomMalus == 4){
