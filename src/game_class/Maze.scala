@@ -232,6 +232,9 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
     grid(cell._1)(cell._2) = keyCell
   }
 
+  /**
+   * Create event in random cell inside the maze
+   */
   private def createEventQuestions(): Unit = {
     val cell: (Int,Int) = getRandomCell
     val eventQuestions = new EventQuestions()

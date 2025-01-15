@@ -157,6 +157,16 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     }
   }
 
+  /**
+   * Funtion used to create the label for the answer and centered the text
+   * @param posX            X position of the label
+   * @param posY            Y position of the label
+   * @param content         Content of the label
+   * @param height          Height of the label
+   * @param display         The display where the label will be created
+   * @param font            The font used for the label
+   * @param backgroundColor The background for the label in the window
+   */
   private def drawTextBox(posX: Int, posY: Int, content: String, height: Int, display: FunGraphics, font: Font = defaultFont, backgroundColor: Color = Color.WHITE): Unit = {
     var stringSize = display.getStringSize(content, defaultFont).getWidth.floor.toInt + 40
 
@@ -164,13 +174,18 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     btnAnswer.displayButton(Color.WHITE, Color.BLACK, 20f)
   }
 
-  def drawQuestion(idQuestion: Int, contenu: String): Unit = {
-    // Réutilisation de la classe Button pour afficher le texte de la question
+  /**
+   * Draw the question and the answer
+   * @param idQuestion  The id of the question, used to know the answer and display the question
+   * @param content     Content of the TextBox
+   */
+  def drawQuestionAnswer(idQuestion: Int, content: String): Unit = {
+    // Create a button like a label to display the question
     var btnQuestion: Button = new Button(20, 50, questions(idQuestion).questionShowed, display.getStringSize(questions(idQuestion).questionShowed, defaultFont).getWidth.floor.toInt + 40, 30, display)
     btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
 
-    // Création de la textBox
-    drawTextBox(20, 100, contenu, 30, display)
+    // Draw the label where the question is showed
+    drawTextBox(20, 100, content, 30, display)
   }
 
   /**

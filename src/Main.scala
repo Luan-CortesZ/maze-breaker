@@ -43,7 +43,7 @@ object Main extends App{
   private var eventLength: Long = 0
   private var allowCustomProperties: Boolean = true
   private var showAllMaze: Boolean = false
-
+  var eventSelect: String = ""
   var moveKeyListener: KeyAdapter = new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
       if (e.getKeyChar == 'p' && allowCustomProperties) {
@@ -73,7 +73,6 @@ object Main extends App{
       }
     }
   }
-
   var charKeyListener: KeyAdapter = new KeyAdapter {
     override def keyPressed(e: KeyEvent): Unit = {
       if (validChar.contains(e.getKeyChar.toString)) {
@@ -149,7 +148,7 @@ object Main extends App{
           isGameFinished = false
         }
       } else {
-        displayMaze.drawQuestion(idQuestion, contenu)
+        displayMaze.drawQuestionAnswer(idQuestion, contenu)
       }
     }
     // FPS sync
@@ -204,37 +203,43 @@ object Main extends App{
    * @param direction player's direction
    */
   def movePlayer(direction: Int): Unit = {
-    //Get movex and movey by direction
-    val (movX, movY) = getDirectionCoord(direction)
+    try{
+      //Get movex and movey by direction
+      val (movX, movY) = getDirectionCoord(direction)
 
-    //Initialize value if player mov in certain direction
-    val ifPlayerMoveX = player.getPosX + movX
-    val ifPlayerMoveY = player.getPosY + movY
+      //Initialize value if player mov in certain direction
+      val ifPlayerMoveX = player.getPosX + movX
+      val ifPlayerMoveY = player.getPosY + movY
 
-    //Move player only if destination cell is not a wall
-    if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
-      //If destination cell is an exit cell && exit is lock show message
-      //If it's unlock, move player and finish game
-      //Else move player in destination cell
-      if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock){
-        doorLockedMessage = true
-      }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock){
-        player.move(movX,movY)
-        isGameFinished = true
-      }else{
-        player.move(movX,movY)
+      //Move player only if destination cell is not a wall
+      if (!maze.isCellAWall(ifPlayerMoveX, ifPlayerMoveY)){
+        //If destination cell is an exit cell && exit is lock show message
+        //If it's unlock, move player and finish game
+        //Else move player in destination cell
+        if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && maze.isExitLock){
+          doorLockedMessage = true
+        }else if(maze.isCellExit(ifPlayerMoveX, ifPlayerMoveY) && !maze.isExitLock){
+          player.move(movX,movY)
+          isGameFinished = true
+        }else{
+          player.move(movX,movY)
+        }
       }
+
+      //Find the shortest path to exit from player
+      maze.findShortestPath(player.getPosX, player.getPosY)
+
+      //Open exit if player is on key cell
+      maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
+    } catch {
+      case e: Exception => println("Vous essayez de sortir du labyrinthe")
     }
-
-    //Find the shortest path to exit from player
-    maze.findShortestPath(player.getPosX, player.getPosY)
-
-    //Open exit if player is on key cell
-    maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
   }
 
-  // Créer une fonction readQuestion, lire le fichier et mettre toute les questions dans un tableau
-  // Crée des zones aléatoire dans la labyrinthe, quand le joueur arrive sur la zone, affiche la question => OK
+  /**
+   * Function used to read the file who contains the question and answer (separated by a ;)
+   * @return
+   */
   private def readFile(): Array[Question] = {
     var questionStock2: Array[Question] = null
     var fileContent: Array[String] = null
@@ -254,14 +259,18 @@ object Main extends App{
     return questionStock2
   }
 
+  /**
+   * Function used to assign a bonus when the user answers the question correctly.
+   * @param randomBonus random number used to select the bonus
+   */
   private def bonus(randomBonus: Int): Unit = {
-    // Voir le chemin de sortie pdt x temps
+    // Show the path to exit
     if (randomBonus == 1) {
       displayMaze.displaySolutionPath(true)
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
-    // Vitesse x 2
+    // Speed x 2
     if (randomBonus == 2) {
       step = 2
       eventStart = System.currentTimeMillis()
@@ -275,6 +284,10 @@ object Main extends App{
     }
   }
 
+  /**
+   * Function used to assign a malus when the user answers the question correctly.
+   * @param randomMalus random number used to select the bonus
+   */
   private def malus(randomMalus: Int): Unit = {
     // Freeze pdt x temps
     if (randomMalus == 1) {
@@ -299,8 +312,11 @@ object Main extends App{
     }
   }
 
-  // Création d'une nouvelle fenêtre contenant la question et une TextBox pour
-  // répondre à la question affichée
+  /**
+   * Select a random question in the file and stop the move of the player
+   * @param x X position of the label
+   * @param y Y position of the label
+   */
   private def caseEvent(x: Int, y: Int): Unit = {
     if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
       idQuestion = Random.between(0, questions.length)
