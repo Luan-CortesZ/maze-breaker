@@ -11,7 +11,7 @@ Taille d’une adresse IPv6 (en bits) ?;128
 Masque de sous-réseau pour /21 ?;255.255.240.0
 Adresse IP de loopback ?;127.0.0.1
 Opérateur pour concaténer deux chaînes ?;+
-Quel est le type d’une variable val x = "Scala" ?;String
+Quel est le type d’une variable val x = "Scala" ?;string
 Fonction pour calculer la taille d’un tableau ?;.length
 Résultat de "hello".reverse ?;olleh
 Quel est la taille d’une adresse IPv4 (en bits) ?;32

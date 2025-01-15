@@ -36,7 +36,7 @@ object Main extends App{
   private var contenu: String = ""
   private var idQuestion: Int = 0
   private var isQuestion: Boolean = false
-  private val validChar = Array(".", ",","[","]","é").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
+  private val validChar = Array(".", ",","[","]","é","+","-").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
   private var isFrozen = false
   private var step: Int = 1
   private var eventStart: Long = 0
