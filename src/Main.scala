@@ -19,7 +19,7 @@ object Main extends App{
   var maze: Maze = _ //Maze
   private val showPath: Boolean = false //Show path to exit to player
   private val centerCamera: Boolean = true //Center camera to player
-  private val cellMazeSize: Int = 32 //Maze's cell size
+  private val cellMazeSize: Int = 64 //Maze's cell size
   private val mazeSize: Int = 21 //Maze size row and column
   private var playerDirection = 1; //Default number direction when starting game
   private var messageStartTime: Long = 0 //Time to display message
@@ -43,34 +43,38 @@ object Main extends App{
   private var eventLength: Long = 0
   private var allowCustomProperties: Boolean = true
   private var showAllMaze: Boolean = false
+  private var drawKeyInInventory: Boolean = false
   var eventSelect: String = ""
   var moveKeyListener: KeyAdapter = new KeyAdapter() {
     override def keyPressed(e: KeyEvent): Unit = {
+      playerDirection = 0
+      if (isFrozen) return
       if (e.getKeyChar == 'p' && allowCustomProperties) {
         displayMaze.displaySolutionPath()
       } else if(e.getKeyChar == 'm' && allowCustomProperties){
         showAllMaze = !showAllMaze
         displayMaze.displayMaze(showAllMaze)
-      }else if(e.getKeyChar == 'l' && allowCustomProperties){
+      } else if(e.getKeyChar == 'l' && allowCustomProperties){
         displayMaze.displayDistanceCell()
-      }else if(e.getKeyChar == 'k' && allowCustomProperties){
+      } else if(e.getKeyChar == 'k' && allowCustomProperties){
         displayMaze.displayAssignedNumber()
-      } else {
-        if (isFrozen) return
-        if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
-          playerDirection = 1
-        } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
-          playerDirection = 3
-        } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
-          playerDirection = 2
-        } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
-          playerDirection = 4
-        }
-        for (_ <- 0 until step) {
-          movePlayer(playerDirection)
-        }
-        caseEvent(player.getPosX, player.getPosY)
+      } else if(e.getKeyChar == '+' && allowCustomProperties){
+        displayMaze.maze.cellSize *=2
+      } else if(e.getKeyChar == '-' && allowCustomProperties){
+        displayMaze.maze.cellSize /=2
+      } else if (e.getKeyCode == KeyEvent.VK_UP || e.getKeyChar == 'w') {
+        playerDirection = 1
+      } else if (e.getKeyCode == KeyEvent.VK_DOWN || e.getKeyChar == 's') {
+        playerDirection = 3
+      } else if (e.getKeyCode == KeyEvent.VK_RIGHT || e.getKeyChar == 'd') {
+        playerDirection = 2
+      } else if (e.getKeyCode == KeyEvent.VK_LEFT || e.getKeyChar == 'a') {
+        playerDirection = 4
       }
+      for (_ <- 0 until step) {
+        movePlayer(playerDirection)
+      }
+      caseEvent(player.getPosX, player.getPosY)
     }
   }
   var charKeyListener: KeyAdapter = new KeyAdapter {
@@ -83,14 +87,15 @@ object Main extends App{
         display.mainFrame.removeKeyListener(charKeyListener)
         allowCustomProperties = false
         if (contenu.trim == questions(idQuestion).answer.trim) {
-          contenu += " - Good answer"
-          bonus(Random.between(0, 4))
+          contenu += s" - Good answer"
+          bonus(Random.between(1, 4))
         } else {
-          contenu += " - Wrong => Good answer : " + questions(idQuestion).answer
-          malus(Random.between(0, 5))
+          contenu += s" - Wrong => Good answer : ${questions(idQuestion).answer}"
+          malus(Random.between(1, 5))
         }
-        Thread.sleep(1500)
+        Thread.sleep(2000)
         contenu = ""
+        eventSelect = ""
         isQuestion = false
         display.mainFrame.addKeyListener(moveKeyListener)
       } else if (e.getKeyCode == KeyEvent.VK_BACK_SPACE) {
@@ -141,6 +146,7 @@ object Main extends App{
         displayMaze.drawPlayer(playerDirection)
         displayMaze.showNotif(doorLockedMessage)
         displayMaze.displayLevel(level.toString)
+        if(drawKeyInInventory) displayMaze.drawKeyInInventory()
 
         if(isGameFinished){
           level+=1
@@ -149,6 +155,7 @@ object Main extends App{
         }
       } else {
         displayMaze.drawQuestionAnswer(idQuestion, contenu)
+        if(eventSelect != "") displayMaze.drawUserEvent(eventSelect)
       }
     }
     // FPS sync
@@ -176,6 +183,7 @@ object Main extends App{
    * Change level
    */
   private def newLevel(): Unit = {
+    drawKeyInInventory = false
     var levelMaze: Int = mazeSize*level
     if(levelMaze % 2 == 0) levelMaze+=1 // avoid to have even maze
     maze = new Maze(levelMaze,levelMaze,cellMazeSize)
@@ -191,6 +199,7 @@ object Main extends App{
    */
   private def getDirectionCoord(direction: Int): (Int, Int) = {
     direction match {
+      case 0 => (0,0)
       case 1 => (0,-1)
       case 2 => (+1, 0)
       case 3 => (0, +1)
@@ -230,7 +239,9 @@ object Main extends App{
       maze.findShortestPath(player.getPosX, player.getPosY)
 
       //Open exit if player is on key cell
-      maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
+      if(!drawKeyInInventory){
+        drawKeyInInventory = maze.openExitIfPlayerOnKey(player.getPosX, player.getPosY)
+      }
     } catch {
       case e: Exception => println("Vous essayez de sortir du labyrinthe")
     }
@@ -269,21 +280,21 @@ object Main extends App{
       eventSelect = "Show the path to exit"
       displayMaze.displaySolutionPath(true)
       eventStart = System.currentTimeMillis()
-      eventLength = 6500 // 5 secondes de bonus
+      eventLength = 7000 // 5 secondes de bonus
     }
     // Speed x 2
-    if (randomBonus == 2) {
+    else if (randomBonus == 2) {
       step = 2
       eventSelect = "Speed x2"
       eventStart = System.currentTimeMillis()
-      eventLength = 6500 // 5 secondes de bonus
+      eventLength = 7000 // 5 secondes de bonus
     }
     // Your vision increased to 5x5
-    if (randomBonus == 3) {
+    else if (randomBonus == 3) {
       eventSelect = "Your vision increased to 5x5"
       displayMaze.displayMaze(5)
       eventStart = System.currentTimeMillis()
-      eventLength = 6500 // 5 secondes de bonus
+      eventLength = 7000 // 5 secondes de bonus
     }
   }
 
@@ -297,10 +308,10 @@ object Main extends App{
       isFrozen = true
       eventSelect = "You are now freezed for 5 seconds"
       eventStart = System.currentTimeMillis()
-      eventLength = 6500 // 5 secondes de bonus
+      eventLength = 7000 // 5 secondes de bonus
     }
     // TP Random
-    if (randomMalus == 2) {
+    else if (randomMalus == 2) {
       val (x,y) = maze.getRandomCell
       eventSelect = "TP random in the maze"
       player.setPosX(x)
@@ -309,7 +320,7 @@ object Main extends App{
       step = 8
       eventSelect = "Your step are increased to 8"
       eventStart = System.currentTimeMillis()
-      eventLength = 6500 // 5 secondes de bonus
+      eventLength = 7000 // 5 secondes de bonus
     }
     // Retour à l'entrée du labyrinthe
     else if(randomMalus == 4){
@@ -325,7 +336,7 @@ object Main extends App{
    * @param y Y position of the label
    */
   private def caseEvent(x: Int, y: Int): Unit = {
-    if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
+    if (maze.getCell(x,y).getClass.getSimpleName.equals("EventQuestions")) {
       idQuestion = Random.between(0, questions.length)
       isQuestion = true
       display.mainFrame.addKeyListener(charKeyListener)

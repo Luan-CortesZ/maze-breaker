@@ -35,7 +35,15 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
    * @return If cell is a wall
    */
   def isCellAWall(x: Int, y: Int): Boolean = {
-    grid(x)(y).isWall
+    getCell(x,y).isWall
+  }
+
+  def getCell(x: Int, y: Int): Cell = {
+    grid(x)(y)
+  }
+
+  def setCell(x: Int, y: Int, cell: Cell): Unit = {
+    grid(x)(y) = cell
   }
 
   /**
@@ -57,7 +65,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
    *         false if not
    */
   def isCellExit(x: Int, y: Int): Boolean = {
-    grid(x)(y).getClass.getSimpleName.equals("Exit")
+    getCell(x,y).getClass.getSimpleName.equals("Exit")
   }
 
   /**
@@ -68,7 +76,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
    *         false if not
    */
   private def isCellEntry(x: Int, y: Int): Boolean = {
-    grid(x)(y).getClass.getSimpleName.equals("Entry")
+    getCell(x,y).getClass.getSimpleName.equals("Entry")
   }
 
   /**
@@ -115,7 +123,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
     //If not, the generation is not complete.
     for(x <- 1 until grid.length by 2;
         y <- 1 until grid(x).length by 2){
-      if(!isCellAWall(x,y) && grid(x)(y).number != nb){
+      if(!isCellAWall(x,y) && getCell(x,y).number != nb){
         return false
       }
     }
@@ -151,11 +159,11 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
   private def initializeCells(): Unit = {
     var nb: Int = 0;
     for (x <- grid.indices; y <- grid(x).indices) {
-      grid(x)(y) = new Cell(cellSize, true) //wall cell by default
+      setCell(x,y,new Cell(cellSize, true)) //wall cell by default
       if(x % 2 != 0 && y % 2 !=0){
         nb+=1;
-        grid(x)(y).number = nb //Assigned value
-        grid(x)(y).isWall = false //Path
+        getCell(x,y).number = nb //Assigned value
+        getCell(x,y).isWall = false //Path
       }
     }
   }
@@ -185,8 +193,8 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
 
         //Verify if two cell around the wall don't have the same number
         if (cell_1.number != cell_2.number) {
-          grid(x)(y).isWall = false //Break the wall
-          grid(x)(y).number = cell_1.number //Assign one of two cell number to this cell
+          getCell(x,y).isWall = false //Break the wall
+          getCell(x,y).number = cell_1.number //Assign one of two cell number to this cell
 
           val targetNumber = cell_1.number //Keep targetNumber
           val sourceNumber = cell_2.number //sourceNumber to replace
@@ -213,7 +221,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
     complexMaze()
     initializeEntryAndExit()
     createKey()
-    for(i <- 0 to level*6){
+    for(i <- 0 to width/2){
       createEventQuestions()
     }
   }
@@ -251,13 +259,16 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
    * @param x position x of player
    * @param y position y of player
    */
-  def openExitIfPlayerOnKey(x: Int, y: Int): Unit = {
+  def openExitIfPlayerOnKey(x: Int, y: Int): Boolean = {
     //If player is on key cell
-    if(grid(x)(y).getClass.getSimpleName.equals("Key")){
+    if(getCell(x,y).getClass.getSimpleName.equals("Key")){
       grid(exit._1)(exit._2).asInstanceOf[Exit].unLock() //unlock exit
       //Transform key cell to normal cell
-      grid(x)(y) = new Cell(grid(x)(y).size,grid(x)(y).isWall,grid(x)(y).number,grid(x)(y).distanceFromExit,grid(x)(y).isPathToExit)
-      grid(x)(y).setImage(image.lstGroundPictures.head)
+      setCell(x,y, new Cell(getCell(x,y).size,getCell(x,y).isWall,getCell(x,y).number,getCell(x,y).distanceFromExit,getCell(x,y).isPathToExit))
+      getCell(x,y).setImage(image.lstGroundPictures.head)
+      true
+    }else{
+      false
     }
   }
 
@@ -268,9 +279,9 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
    */
   def triggerQuestionIfPlayerOnEvent(x: Int, y: Int): Unit = {
     //If player is on key cell
-    if(grid(x)(y).getClass.getSimpleName.equals("EventQuestions")){
-      grid(x)(y) = new Cell(grid(x)(y).size, grid(x)(y).isWall, grid(x)(y).number, grid(x)(y).distanceFromExit, grid(x)(y).isPathToExit)
-      grid(x)(y).setImage(image.lstGroundPictures.head)
+    if(getCell(x,y).getClass.getSimpleName.equals("EventQuestions")){
+      setCell(x,y,new Cell(getCell(x,y).size, getCell(x,y).isWall, getCell(x,y).number, getCell(x,y).distanceFromExit, getCell(x,y).isPathToExit))
+      getCell(x,y).setImage(image.lstGroundPictures.head)
     }
   }
 
@@ -281,7 +292,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
     //transform some walls to path
     for(i <- 0 to width){
       val (x,y) = getRandomWall
-      grid(x)(y).isWall = false
+      getCell(x,y).isWall = false
     }
   }
 
@@ -379,7 +390,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
   private def resetDistance(): Unit = {
     for(x <- grid.indices;
         y <- grid(x).indices){
-      grid(x)(y).distanceFromExit = -1
+      getCell(x,y).distanceFromExit = -1
     }
   }
 
@@ -398,7 +409,7 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
   private def resetPathToExit(): Unit = {
     for(x <- grid.indices;
         y <- grid(x).indices){
-      grid(x)(y).isPathToExit = false
+      getCell(x,y).isPathToExit = false
     }
   }
 

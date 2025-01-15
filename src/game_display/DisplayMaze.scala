@@ -30,6 +30,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
   private var lightZoneRadius = 1 // Number of cells around the player (radius)
   private var showDistanceCell: Boolean = false
   private var showNumberCell: Boolean = false
+  private var currentUserPicture: GraphicsBitmap = _
 
   /**
    * Show maze in window
@@ -45,26 +46,24 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     for (x <- maze.grid.indices;
          y <- maze.grid(x).indices) {
       var cellImage: GraphicsBitmap = null
-      if (maze.grid(x)(y).isWall) {
+      if (maze.getCell(x,y).isWall) {
         cellImage = image.wallPicture //Wall picture
-      } else if (!maze.grid(x)(y).isWall) {
+      } else if (!maze.getCell(x,y).isWall) {
         cellImage = image.lstGroundPictures(Random.nextInt(image.lstGroundPictures.length)) //Random ground pictures
-        if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && maze.grid(x)(y).asInstanceOf[Exit].isLock) {
+        if (maze.getCell(x,y).getClass.getSimpleName.equals("Exit") && maze.getCell(x,y).asInstanceOf[Exit].isLock) {
           cellImage = image.locked_door //Exit door locked
-        } else if (maze.grid(x)(y).getClass.getSimpleName.equals("Exit") && !maze.grid(x)(y).asInstanceOf[Exit].isLock) {
+        } else if (maze.getCell(x,y).getClass.getSimpleName.equals("Exit") && !maze.getCell(x,y).asInstanceOf[Exit].isLock) {
           cellImage = image.opened_door //Exit door opened
-        } else if (maze.grid(x)(y).getClass.getSimpleName.equals("Entry")) {
+        } else if (maze.getCell(x,y).getClass.getSimpleName.equals("Entry")) {
           cellImage = image.entry_door //Entry door
-        } else if (maze.grid(x)(y).getClass.getSimpleName.equals("Key")) {
+        } else if (maze.getCell(x,y).getClass.getSimpleName.equals("Key") || maze.getCell(x,y).getClass.getSimpleName.equals("EventQuestions")) {
           cellImage = image.keyPicture //Key picture
-        } else if (maze.grid(x)(y).getClass.getSimpleName.equals("EventQuestions")) {
-          cellImage = image.eventPicture //Event picture
         }
       }
-      if (maze.grid(x)(y).isWall && maze.isValidCell(x, y) && Random.nextInt(5) == 1) {
-        maze.grid(x)(y).hasTorch = true //Random wall has torch or not
+      if (maze.getCell(x,y).isWall && maze.isValidCell(x, y) && Random.nextInt(5) == 1) {
+        maze.getCell(x,y).hasTorch = true //Random wall has torch or not
       }
-      maze.grid(x)(y).setImage(cellImage) //Set cell image
+      maze.getCell(x,y).setImage(cellImage) //Set cell image
     }
   }
 
@@ -133,7 +132,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     // Draw visible cells
     for (x <- maze.grid.indices;
          y <- maze.grid(x).indices) {
-      drawCell(x, y, maze.grid(x)(y))
+      drawCell(x, y)
     }
   }
 
@@ -143,17 +142,18 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
    * @param direction direction to draw player
    */
   def drawPlayer(direction: Int): Unit = {
-    val playerPicture = direction match {
+    currentUserPicture = direction match {
       case 1 => image.playerTop
       case 2 => image.playerRight
       case 3 => image.playerDown
       case 4 => image.playerLeft
+      case _ => currentUserPicture
     }
     //Is player centered ?
     if (centerCamera) {
-      display.drawTransformedPicture(centerX, centerY, 0, maze.cellSize / 32, playerPicture)
+      display.drawTransformedPicture(centerX, centerY, 0, maze.cellSize / 32, currentUserPicture)
     } else {
-      display.drawTransformedPicture(player.getPosX * maze.cellSize + offsetX + maze.cellSize / 2, player.getPosY * maze.cellSize + offsetY + maze.cellSize / 2, 0, maze.cellSize / 32, playerPicture)
+      display.drawTransformedPicture(player.getPosX * maze.cellSize + offsetX + maze.cellSize / 2, player.getPosY * maze.cellSize + offsetY + maze.cellSize / 2, 0, maze.cellSize / 32, currentUserPicture)
     }
   }
 
@@ -184,8 +184,17 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
     var btnQuestion: Button = new Button(20, 50, questions(idQuestion).questionShowed, display.getStringSize(questions(idQuestion).questionShowed, defaultFont).getWidth.floor.toInt + 40, 30, display)
     btnQuestion.displayButton(Color.WHITE, Color.BLACK, 20f)
 
-    // Draw the label where the question is showed
+    // Draw the label where the question is shown
     drawTextBox(20, 100, content, 30, display)
+  }
+
+  def drawUserEvent(event: String): Unit = {
+    // Draw the label where the question is shown
+    drawTextBox(20, 300, event, 50, display)
+  }
+
+  def drawKeyInInventory(): Unit = {
+    display.drawTransformedPicture(50, 50, 0,1, image.keyPicture)
   }
 
   /**
@@ -245,14 +254,14 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
    *
    * @param x    coord x of cell
    * @param y    coord y of cell
-   * @param cell cell to draw
    */
-  private def drawCell(x: Int, y: Int, cell: Cell): Unit = {
+  private def drawCell(x: Int, y: Int): Unit = {
+    val cell = maze.getCell(x,y)
     val drawX = getXCoordWithOffset(x)
     val drawY = getYCoordWithOffset(y)
 
     // Limits in pixels based on the size of the cells
-    val lightZonePixel = lightZoneRadius * cell.size
+    val lightZonePixel = lightZoneRadius * maze.cellSize
 
     // Check if the cell is in the visible zone
     if (drawX >= centerX - lightZonePixel &&
@@ -261,33 +270,33 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
       drawY <= centerY + lightZonePixel) {
 
       // Draw default ground picture for global background
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures.head)
+      display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, image.lstGroundPictures.head)
 
       // Draw the cell image
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, cell.image)
+      display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, cell.image)
 
       // Draw the torch if the cell contains one
       if (cell.hasTorch) {
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.torch)
+        display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, image.torch)
       }
 
       // Draw the path to the exit if enabled
-      if (maze.grid(x)(y).isPathToExit && displayPath) {
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.path)
+      if (maze.getCell(x,y).isPathToExit && displayPath) {
+        display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, image.path)
       }
 
-    } else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height) {
+    } else if (drawX >= 0 && drawX <= display.width && drawY >= 0 && drawY <= display.height ) {
       // Outside the light zone, draw without details
-      display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures.head)
+      display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, image.lstGroundPictures.head)
       if (cell.image == image.keyPicture || cell.image == image.locked_door || cell.image.name == image.opened_door.name || cell.image.name == image.eventPicture.name) {
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, image.lstGroundPictures(randomGroundPicture))
+        display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, image.lstGroundPictures(randomGroundPicture))
       } else {
-        display.drawTransformedPicture(drawX, drawY, 0, cell.size / 32, cell.image)
+        display.drawTransformedPicture(drawX, drawY, 0, maze.cellSize / 32, cell.image)
       }
 
       // Apply a shadow to hide details
       display.setColor(new Color(0, 0, 0, 0.7f))
-      display.drawFillRect(drawX - cell.size / 2, drawY - cell.size / 2, cell.size, cell.size)
+      display.drawFillRect(drawX - maze.cellSize / 2, drawY - maze.cellSize / 2, maze.cellSize, maze.cellSize)
     }
 
     if(showNumberCell){
@@ -306,7 +315,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
    */
   private def showDistanceFromExit(x: Int, y: Int, cell: Cell): Unit = {
     if (!cell.isWall) {
-      display.drawString(x, y, cell.distanceFromExit.toString, new Font("Sans Serif", 0, 15), new Color(255, 255, 255), 1, 1)
+      display.drawString(x-maze.cellSize/4, y-maze.cellSize/4, cell.distanceFromExit.toString, new Font("Sans Serif", 0, maze.cellSize/4), new Color(255, 255, 255), 1, 1)
     }
   }
 
@@ -326,7 +335,7 @@ class DisplayMaze(var display: FunGraphics, var player: Player, var maze: Maze =
    * @param cell cell to show assigned number
    */
   private def showAssignedNumber(x: Int, y: Int, cell: Cell): Unit = {
-    display.drawString(x, y, cell.number.toString, new Font("Sans Serif", 0, 15), new Color(255, 255, 255), 1, 1)
+    display.drawString(x-maze.cellSize/4, y-maze.cellSize/4, cell.number.toString, new Font("Sans Serif", 0, maze.cellSize/4), new Color(255, 255, 255), 1, 1)
   }
 
   /**
