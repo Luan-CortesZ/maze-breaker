@@ -261,8 +261,8 @@ class Maze(var width: Int, var height: Int, var cellSize: Int = 30) {
     }
   }
 
-  /**
-   * Open exit if player get key
+   /**
+   * Show question if player is on a event case
    * @param x position x of player
    * @param y position y of player
    */

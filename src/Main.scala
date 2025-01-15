@@ -36,7 +36,7 @@ object Main extends App{
   private var contenu: String = ""
   private var idQuestion: Int = 0
   private var isQuestion: Boolean = false
-  private val validChar = Array(".", ",","[","]").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
+  private val validChar = Array(".", ",","[","]","é").concat(Array.range(0, 10).map(_.toString)).concat(Array.range('a', 'z' + 1).map(_.toChar.toString))
   private var isFrozen = false
   private var step: Int = 1
   private var eventStart: Long = 0
@@ -84,7 +84,7 @@ object Main extends App{
         allowCustomProperties = false
         if (contenu.trim == questions(idQuestion).answer.trim) {
           contenu += " - Good answer"
-          bonus(Random.between(0, 4))
+          // bonus(Random.between(0, 4))
         } else {
           contenu += " - Wrong => Good answer : " + questions(idQuestion).answer
           malus(Random.between(0, 5))
@@ -238,25 +238,25 @@ object Main extends App{
 
   /**
    * Function used to read the file who contains the question and answer (separated by a ;)
-   * @return
+   * @return an Array of question containing the question and the answer
    */
   private def readFile(): Array[Question] = {
-    var questionStock2: Array[Question] = null
+    var questionStock: Array[Question] = null
     var fileContent: Array[String] = null
     try {
       val filename = "src/questions/Questions.txt"
       val src: BufferedSource = Source.fromFile(filename)
       fileContent = src.getLines().toArray
-      questionStock2 = new Array[Question](fileContent.length)
+      questionStock = new Array[Question](fileContent.length)
       for (line <- fileContent.indices) {
-        questionStock2(line) = new Question(fileContent(line).split(";")(0), fileContent(line).split(";")(1))
+        questionStock(line) = new Question(fileContent(line).split(";")(0), fileContent(line).split(";")(1))
       }
       src.close()
 
     } catch {
       case e: Exception => e.printStackTrace()
     }
-    return questionStock2
+    return questionStock
   }
 
   /**
@@ -266,6 +266,7 @@ object Main extends App{
   private def bonus(randomBonus: Int): Unit = {
     // Show the path to exit
     if (randomBonus == 1) {
+      eventSelect = "Show the path to exit"
       displayMaze.displaySolutionPath(true)
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
@@ -273,11 +274,13 @@ object Main extends App{
     // Speed x 2
     if (randomBonus == 2) {
       step = 2
+      eventSelect = "Speed x2"
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
-    // Dezoom
+    // Your vision increased to 5x5
     if (randomBonus == 3) {
+      eventSelect = "Your vision increased to 5x5"
       displayMaze.displayMaze(5)
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
@@ -289,24 +292,28 @@ object Main extends App{
    * @param randomMalus random number used to select the bonus
    */
   private def malus(randomMalus: Int): Unit = {
-    // Freeze pdt x temps
+    // Freeze for x time
     if (randomMalus == 1) {
       isFrozen = true
+      eventSelect = "You are now freezed for 5 seconds"
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
     // TP Random
     if (randomMalus == 2) {
-      val (x,y) = maze.getRandomCell;
+      val (x,y) = maze.getRandomCell
+      eventSelect = "TP random in the maze"
       player.setPosX(x)
       player.setPosY(y)
     } else if (randomMalus == 3) {
       step = 8
+      eventSelect = "Your step are increased to 8"
       eventStart = System.currentTimeMillis()
       eventLength = 6500 // 5 secondes de bonus
     }
     // Retour à l'entrée du labyrinthe
     else if(randomMalus == 4){
+      eventSelect = "TP at the entry of the maze"
       player.setPosX(maze.entry._1)
       player.setPosY(maze.entry._2)
     }
