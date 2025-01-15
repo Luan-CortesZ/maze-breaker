@@ -84,7 +84,7 @@ object Main extends App{
         allowCustomProperties = false
         if (contenu.trim == questions(idQuestion).answer.trim) {
           contenu += " - Good answer"
-          // bonus(Random.between(0, 4))
+          bonus(Random.between(0, 4))
         } else {
           contenu += " - Wrong => Good answer : " + questions(idQuestion).answer
           malus(Random.between(0, 5))
